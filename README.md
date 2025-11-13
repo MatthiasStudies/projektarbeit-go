@@ -1,10 +1,10 @@
-## Go Generics
+## Go-Generics
 
-- Go Generics are defined using type parameters and can be used on functions, structs, interfaces, and methods.
-- Type parameters are specified within square brackets `[]` after the function or type name.
-- Generic types must be constrained using type constraints to specify the allowed types for the type parameters.
-	- **Constrained by interface**: Define an interface that needs to be implemented by the type parameter.
-		- Example:
+- Go-Generics werden mit Typparametern definiert und können in Funktionen, Structs, Interfaces und Methoden verwendet werden.
+- Typparameter werden in eckigen Klammern `[]` nach dem Funktions- oder Typnamen angegeben.
+- Generische Typen müssen mit Typbeschränkungen (Type Constraints) eingeschränkt werden.
+	- **Einschränkung durch Interface**: Definiere ein Interface, das der Typparameter implementieren muss.
+		- Beispiel:
 		```go
 		type Stringer interface {
 			String() string
@@ -15,15 +15,15 @@
 		}
 		```
 
-		> The special `comparable` constraint allows any type that supports comparison operators (`==`, `!=`). This is useful when using the generic type as a key in maps or when checking for equality.
-		- Example:
+		> Die spezielle Einschränkung `comparable` erlaubt jeden Typ, der Vergleichsoperatoren (`==`, `!=`) unterstützt. Das ist nützlich, wenn der generische Typ als Schlüssel in Maps verwendet wird oder bei Gleichheitsprüfungen.
+		- Beispiel:
 			```go
 			func AreEqual[T comparable](a, b T) bool {
 				return a == b
 			}
 			```
-	- **Constrained by type**: Define a (base) type that the type parameter must be based on.
-		- Example:
+	- **Einschränkung durch Typ**: Definiere einen (Basis-)Typ, auf dem der Typparameter basieren muss.
+		- Beispiel:
 		```go
 		func PrintValue[T ~int](value T) {
 			fmt.Println(value)
@@ -31,71 +31,71 @@
 
 		type MyInt int
 
-		PrintValue(MyInt(42)) // Valid, MyInt's underlying type is int
-		PrintValue(100)       // Valid, int is allowed
+		PrintValue(MyInt(42)) // Gültig, der zugrunde liegende Typ von MyInt ist int
+		PrintValue(100)       // Gültig, int ist erlaubt
 		```
-		> The `~` operator allows the type parameter to accept any type whose underlying type is the specified base type.
+		> Der Operator `~` erlaubt dem Typparameter, jeden Typ zu akzeptieren, dessen zugrunde liegender Typ dem angegebenen Basistyp entspricht.
 
-	- **Constrained by multiple types (type sets)**: Define a set of types that a type parameter can accept.
-		- Example: 
+	- **Einschränkung durch mehrere Typen (Type Sets)**: Definiere eine Menge von Typen, die ein Typparameter akzeptieren kann.
+		- Beispiel: 
 		```go
 		func PrintType[T int | string](value T) {
 			fmt.Println(value)
 		}
 
-		//or
+		// oder
 
 		func SumNumbers[T interface {int | float64}](a, b T) T {
 			return a + b
 		}
 
-		PrintType(42)        // Valid, int is allowed
-		PrintType("Hello")   // Valid, string is allowed
+		PrintType(42)        // Gültig, int ist erlaubt
+		PrintType("Hello")   // Gültig, string ist erlaubt
 		```
-		> The Go experimental library `golang.org/x/exp/constraints` provides some predefined type sets like `constraints.Ordered` for types that support ordering operators (`<`, `>`, etc.) or `constraints.Integer` for integer types.
+		> Die experimentelle Go-Bibliothek `golang.org/x/exp/constraints` stellt einige vordefinierte Typmengen bereit, wie `constraints.Ordered` für Typen, die Ordnungsoperatoren (`<`, `>`, etc.) unterstützen, oder `constraints.Integer` für Ganzzahltypen.
 
-- Go can infer type parameters when calling generic functions, so you often don't need to specify them explicitly.
-	- Example:
+- Go kann Typparameter beim Aufruf generischer Funktionen ableiten, daher müssen sie oft nicht explizit angegeben werden.
+	- Beispiel:
 	```go
 	func PrintValue[T any](value T) {
 		fmt.Println(value)
 	}		
-	PrintValue(42)          // Type parameter T is inferred as int
-	PrintValue("Hello")     // Type parameter T is inferred as string
+	PrintValue(42)          // Typparameter T wird als int abgeleitet
+	PrintValue("Hello")     // Typparameter T wird als string abgeleitet
 	```
-- At compile time, Go uses **Monomorphization** to generate type specific versions of generic functions/types for each unique set of type arguments used in the code. This ensures that there is no runtime overhead associated with using generics. This will however lead to larger binary sizes if many different type arguments are used.
+- Zur Compile-Zeit verwendet Go die Monomorphisierung, um typspezifische Versionen generischer Funktionen/Typen für jede eindeutig verwendete Kombination von Typargumenten zu erzeugen. Dadurch entsteht kein Laufzeit-Overhead bei der Verwendung von Generics. Allerdings führt dies zu größeren Binärdateien, wenn viele unterschiedliche Typargumente verwendet werden.
 
-## Go Generics Limitations
-- Methods cannot have their own type parameters; only the type they are defined on (receiver) can have type parameters.
+## Einschränkungen von Go-Generics
+- Methoden können keine eigenen Typparameter haben; nur der Typ, auf dem sie definiert sind (Receiver), kann Typparameter besitzen.
 	```go
 	func (t T) MethodName[U any](param U) { 
-		// This is not allowed 
+		// Das ist nicht erlaubt 
 	}
 	```
-- Methods cannot constrain their receiver type parameters further.
+- Methoden können die Typparameter ihres Receivers nicht weiter einschränken.
 	```go
 	type Container[T any] struct {
 		value T
 	}
 
 	func (c Container[T comparable]) IsEqual(other Container[T]) bool { 
-		// This is not allowed 
+		// Das ist nicht erlaubt 
 		return c.value == other.value
 	}
 	```
-- You cannot implement the `comparable` constraint on custom types.
-- Limited type assertion, even when using `any` as a constraint.
+- Die Einschränkung `comparable` kann nicht für benutzerdefinierte Typen implementiert werden.
+- Eingeschränkte Type Assertions, selbst wenn `any` als Constraint verwendet wird.
 	```go
 	func ProcessValue[T any](value T) {
-		str,ok := value.(string) // This is not allowed
+		str,ok := value.(string) // Das ist nicht erlaubt
 	}
 
 	// Workaround:
 	func ProcessValue[T any](value T) {
-		str, ok := any(value).(string) // This is allowed
+		str, ok := any(value).(string) // Das ist erlaubt
 	}
 	```
-- Methods or fields of struct-constraints cannot be accessed on the type parameter directly.
+- Auf Methoden oder Felder von Struct-Constraints kann nicht direkt über den Typparameter zugegriffen werden.
 	```go
 	type Box struct {
 		value int
@@ -106,16 +106,16 @@
 	}
 
 	func ProcessBox[T Box](box T) {
-		val := box.GetValue() // This is not allowed
-		val := box.value // This is not allowed
+		val := box.GetValue() // Das ist nicht erlaubt
+		val := box.value // Das ist nicht erlaubt
 	}
 
 	// Workaround:
 	func ProcessBox[T Box](box T) {
-		val := Box(box).GetValue() // This is allowed
+		val := Box(box).GetValue() // Das ist erlaubt
 	}
 	```
-- Multiple interfaces cannot be used as a type set constraint.
+- Mehrere Interfaces können nicht als Typmengen verwendet werden.
 	```go
 	type Reader interface {
 		Read(p []byte) (n int, err error)
@@ -126,7 +126,7 @@
 	}
 
 	func ReadWrite[T Reader | Writer](rw T) { 
-		// This is not allowed 
+		// Das ist nicht erlaubt 
 	}
 	```
 
