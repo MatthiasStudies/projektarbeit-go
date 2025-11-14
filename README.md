@@ -9,6 +9,7 @@
 - Generische Typen müssen mit Typbeschränkungen (Type Constraints) eingeschränkt werden.
 	- **Einschränkung durch Interface**: Definiere ein Interface, das der Typparameter implementieren muss.
 		- Beispiel:
+
 			```go
 			type Stringer interface {
 				String() string
@@ -21,6 +22,7 @@
 			> Die spezielle Einschränkung `comparable` erlaubt jeden Typ, der Vergleichsoperatoren (`==`, `!=`) unterstützt. Das ist nützlich, wenn der generische Typ als Schlüssel in Maps verwendet wird oder bei Gleichheitsprüfungen.
 	- **Einschränkung durch Typ**: Definiere einen (Basis-)Typ, auf dem der Typparameter basieren muss.
 		- Beispiel: 
+
 			```go
 			func PrintValue[T ~int](value T) {
 				fmt.Println(value)
@@ -35,6 +37,7 @@
 
 	- **Einschränkung durch mehrere Typen (Type Sets)**: Definiere eine Menge von Typen, die ein Typparameter akzeptieren kann.
 		- Beispiel: 
+
 			```go
 			func PrintType[T int | string](value T) {
 				fmt.Println(value)
@@ -53,6 +56,7 @@
 
 - Go kann Typparameter beim Aufruf generischer Funktionen ableiten, daher müssen sie oft nicht explizit angegeben werden.
 	- Beispiel:
+
 		```go
 		func PrintValue[T any](value T) {
 			fmt.Println(value)
@@ -64,12 +68,14 @@
 
 ### Einschränkungen von Go-Generics
 - Methoden können keine eigenen Typparameter haben; nur der Typ, auf dem sie definiert sind (Receiver), kann Typparameter besitzen.
+
 	```go
 	func (t T) MethodName[U any](param U) { 
 		// Das ist nicht erlaubt 
 	}
 	```
 - Methoden können die Typparameter ihres Receivers nicht weiter einschränken.
+
 	```go
 	type Container[T any] struct {
 		value T
@@ -82,6 +88,7 @@
 	```
 - Die Einschränkung `comparable` kann nicht für benutzerdefinierte Typen implementiert werden.
 - Eingeschränkte Type Assertions, selbst wenn `any` als Constraint verwendet wird.
+
 	```go
 	func ProcessValue[T any](value T) {
 		str,ok := value.(string) // Das ist nicht erlaubt
@@ -93,6 +100,7 @@
 	}
 	```
 - Auf Methoden oder Felder von Struct-Constraints kann nicht direkt über den Typparameter zugegriffen werden.
+
 	```go
 	type Box struct {
 		value int
@@ -113,6 +121,7 @@
 	}
 	```
 - Mehrere Interfaces können nicht als Typmengen verwendet werden.
+
 	```go
 	type Reader interface {
 		Read(p []byte) (n int, err error)
