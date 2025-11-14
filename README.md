@@ -185,3 +185,6 @@ Scopes sind hierarchisch organisiert, wobei jeder Scope einen übergeordneten Sc
 - [`go/types` package](https://cs.opensource.google/go/go/+/refs/tags/go1.25.4:src/go/types/;drc=34b70684ba2fc8c5cba900e9abdfb874c1bd8c0e)
 - [The Go Programming Language Specification](https://go.dev/ref/spec)
 - [Go Standard Library Documentation (`go/types`)](https://pkg.go.dev/go/types@go1.25.4)
+
+## Angaben zur Nutzung von KI
+Einige Inhalte dieses Dokuments wurden mit Unterstützung von KI-Technologien recherchiert und verfasst. Dabei kamen insbesondere Sprachmodelle wie Google Gemini und Copilot zum Einsatz. Diese Technologien halfen dabei, Informationen zu strukturieren, Codebeispiele zu generieren und komplexe Konzepte verständlich darzustellen. Trotz sorgfältiger Überprüfung durch den Autor können Fehler oder Ungenauigkeiten nicht vollständig ausgeschlossen werden. Der Autor übernimmt die volle Verantwortung für den Inhalt dieses Dokuments.
