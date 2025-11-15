@@ -210,7 +210,7 @@ Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen au
 - `V` und `T` sind identisch.
 - `V` und `T` haben den gleichen zugrunde liegenden Typ und mindestens einer von `T` oder `V` ist kein benannter Typ.
 
-	> Achtung: Benannte Typen bezieht sich hier auf die durch Definition der Go-Spezifikation, nicht auf die vom Typecheker verwendeten `*types.Named`. Daher sind `int`, `string`, etc. auch benannte Typen.
+	> Achtung: Benannte Typen bezieht sich hier auf die Definition der Go-Spezifikation, nicht auf die vom Typecheker verwendeten `*types.Named`. Daher sind `int`, `string`, etc. auch benannte Typen.
 
 	```go
 	type MyInt int
