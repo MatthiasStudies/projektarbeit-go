@@ -22,12 +22,10 @@ jobs:
           run: |
             sudo apt-get update
             sudo apt-get install -y pandoc
-        - name: Instsall dependencies
+        - name: Install dependencies
           run: |
             npm install -g markdown-toc
-            ARCH=$(dpkg --print-architecture)
-            wget --quiet https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_${ARCH}.deb
-            sudo dpkg -i wkhtmltox_0.12.6.1-3.bookworm_${ARCH}.deb
+            sudo apt-get install xvfb libfontconfig wkhtmltopdf
         - name: Generate Table of Contents
           run: |
             markdown-toc -i README.md
