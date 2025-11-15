@@ -16,7 +16,6 @@ func main() {
 	x = MyInt(43)
 	s := MyStruct{Field1: "hello", Field2: 10}
 	// inspect: MyStruct, 1, s, s.Field1
-	x = "srting"
 	_ = x
 	_ = s
 }

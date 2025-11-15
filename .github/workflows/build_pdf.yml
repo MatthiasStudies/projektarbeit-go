@@ -1,0 +1,41 @@
+on:
+    push:
+        branches:
+        - main
+    pull_request:
+        branches:
+        - main
+jobs:
+    build_pdf:
+        env:
+          MARGIN: 25mm
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v3
+
+        - name: Set up npm
+          uses: actions/setup-node@v3
+          with:
+            node-version: '22'
+        - name: Set up Pandoc
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y pandoc
+        - name: Instsall dependencies
+          run: |
+            npm install -g markdown-toc
+        - name: Generate Table of Contents
+          run: |
+            markdown-toc -i README.md
+        - name: Build PDF
+          run: |
+            pandoc README.md -o documentation.pdf --pdf-engine=wkhtmltopdf --css=./assets/pdf_style.css \
+                  -V margin-top=${{ env.MARGIN }} -V margin-bottom=${{ env.MARGIN }} \
+                  -V margin-left=${{ env.MARGIN }} -V margin-right=${{ env.MARGIN }} \
+                  -V papersize=a4
+        - name: Release PDF
+          uses: ncipollo/release-action@v1
+          with:
+            artifacts: "documentation.pdf"
+            tag: pdf-build-${{ github.run_id }}

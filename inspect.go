@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"go/ast"
 	"go/importer"
@@ -108,14 +109,21 @@ func inspectFile(file string) {
 	inspectCode(string(data), filename)
 }
 
+var file = flag.String("file", "", "Go source file to inspect")
+var code = flag.String("code", "", "Go source code to inspect")
+
 func main() {
-	if len(os.Args) <= 1 {
-		fmt.Println("usage: inspect <file.go>")
+	flag.Parse()
+
+	if *file == "" && *code == "" {
+		fmt.Println("usage: inspect -file <file.go> OR -code '<go code>'")
 		return
 	}
 
-	for _, file := range os.Args[1:] {
-		fmt.Printf("Inspecting file: %s\n", file)
-		inspectFile(file)
+	if *file != "" {
+		inspectFile(*file)
+	}
+	if *code != "" {
+		inspectCode(*code, "input.go")
 	}
 }
