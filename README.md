@@ -2,8 +2,6 @@
 
 # Projektarbeit: Go-Generics und der Typechecker (wip)
 
-<!-- toc -->
-
 ## Grundlagen und Einschränkungen von Go-Generics
 
 ### Einführung
@@ -208,13 +206,14 @@ Das `types.Type`-Interface definiert nur wenige Methoden, da Typen sehr untersch
 
 #### Komaptibilität von Typen
 Um zu überprüfen, ob zwei Typen miteinander kompatibel sind, unterscheided Go zwischen drei Beziehungen von Typen. Für jede dieser Beziehungen stellt der `go/types`-Package entsprechende Funktionen bereit
+
 ##### Zuweisbarkeit
 Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen auch Funktionsaufrufe mit Parametern, Map-Zugriff, etc.) verwendet werden können. Für zwei Typen `T` und `V` ist `V` zuweisbar zu `T`, wenn eines der folgenden Kriterien erfüllt ist (Auswahl):
-	 - `V` und `T` sind identisch.
-	 - `V` und `T` haben den gleichen zugrunde liegenden Typ und mindestens einer von `T` oder `V` ist kein benannter Typ.
-		> Achtung: Benannte Typen bezieht sich hier auf die durch Definition der Go-Spezifikation, nicht auf die vom Typecheker verwendeten `*types.Named`. Daher sind `int`, `string`, etc. auch benannte Typen.
+- `V` und `T` sind identisch.
+- `V` und `T` haben den gleichen zugrunde liegenden Typ und mindestens einer von `T` oder `V` ist kein benannter Typ.
+	> Achtung: Benannte Typen bezieht sich hier auf die durch Definition der Go-Spezifikation, nicht auf die vom Typecheker verwendeten `*types.Named`. Daher sind `int`, `string`, etc. auch benannte Typen.
 
-		```go
+	```go
 		type MyInt int
 		var a int
 		var b MyInt
@@ -228,7 +227,8 @@ Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen au
 
 		c = d // Erlaubt: zugrunde liegender Typ ist gleich ([]int) und c ist kein benannter Typ
 		```
-	 - Weitere spezielle Regeln für bestimmte Typen (z.B. Schnittstellen, Funktionen, etc.).
+
+- Weitere spezielle Regeln für bestimmte Typen (z.B. Schnittstellen, Funktionen, etc.).
 Um zu überprüfen, ob zwei Typen zueinander zuweisbar sind, stellt das `go/types`-Package die Funktion `types.AssignableTo(V, T Type) bool` bereit.
 
 ##### Vergleichbarkeit
@@ -238,10 +238,10 @@ Um zu überprüfen, ob ein Typ vergleichbar ist, stellt das `go/types`-Package d
 
 ##### Umwandlungsfähigkeit
 Regelt, ob ein Wert von einem Type in einen anderen Type umgewandelt werden kann. Umwandlungen können sowohl explizit (z.B. `T(v)`) als auch implizit (z.B. bei Funktionsaufrufen) erfolgen. Ein Wert `x` kann dann in einen Typ `T` umgewandelt werden, wenn eines der folgenden Kriterien erfüllt ist (Auswahl):
-		- `x` ist zuweisbar zu `T`.
-		- `x` ist ein `string` und `T` ist ein `[]byte` oder `[]rune` (und umgekehrt).
-		- `x` und `T` sind beide numerische Typen (z.B. `int`, `float64`, etc.).
-		- Weitere spezielle Regeln für bestimmte Typen (z.B. Typeparameter, Pointer, etc.).
+- `x` ist zuweisbar zu `T`.
+- `x` ist ein `string` und `T` ist ein `[]byte` oder `[]rune` (undumgekehrt).
+- `x` und `T` sind beide numerische Typen (z.B. `int`, `float64`, etc.).
+- Weitere spezielle Regeln für bestimmte Typen (z.B. Typeparameter, Pointer, etc.).
 
 Um zu überprüfen, ob ein Typ in einen anderen Typ umgewandelt werden kann, stellt das `go/types`-Package die Funktion `types.ConvertibleTo(V, T Type) bool` bereit.
 
