@@ -38,7 +38,7 @@ jobs:
         - name: Add GitHub Version to README
           run: |
             GITHUB_HASH=$(git rev-parse --short HEAD)
-            GITHUB_REF_TEXT="*** \n\n_Version \`${GITHUB_HASH}\`_"
+            GITHUB_REF_TEXT="\n\n*** \n\n_GitHub Version \`${GITHUB_HASH} ($(date +'%Y%m%d%H%M%S'))\`_"
             echo -e "\n$GITHUB_REF_TEXT" >> README.md
         - name: Build PDF
           run: |
@@ -50,4 +50,4 @@ jobs:
           uses: ncipollo/release-action@v1
           with:
             artifacts: "documentation.pdf"
-            tag: pdf-build-${{ github.run_number }}
+            tag: pdf-build-$(date +'%Y%m%d%H%M%S')
