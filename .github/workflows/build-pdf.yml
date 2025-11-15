@@ -11,7 +11,7 @@ permissions:
     packages: write
 
 jobs:
-    build_pdf:
+    build-pdf:
         timeout-minutes: 5
         env:
           MARGIN: 25mm
@@ -38,7 +38,8 @@ jobs:
         - name: Add GitHub Version to README
           run: |
             GITHUB_HASH=$(git rev-parse --short HEAD)
-            GITHUB_REF_TEXT="\n\n*** \n\n_GitHub Version \`${GITHUB_HASH} ($(date +'%Y%m%d%H%M%S'))\`_"
+            DATE=$(date +'%Y%m%d%H%M%S')
+            GITHUB_REF_TEXT="\n\n*** \n\n_GitHub Version \`${GITHUB_HASH} (${DATE})\`_"
             echo -e "\n$GITHUB_REF_TEXT" >> README.md
         - name: Build PDF
           run: |
@@ -50,5 +51,5 @@ jobs:
           uses: ncipollo/release-action@v1
           with:
             artifacts: "Projektarbeit Go.pdf"
-            tag: pdf-build-$(date +'%Y%m%d%H%M%S')
+            tag: pdf-build-${DATE}
             makeLatest: true
