@@ -7,32 +7,10 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"os"
+	"path/filepath"
 	"strings"
 )
-
-const inspectCode = `
-package main
-
-type MyInt int
-
-func isEven(n MyInt) bool {
-	return n%2 == 0
-}
-
-type MyStruct struct {
-	Field1 string
-	Field2 int
-}
-
-func main() {
-	x := MyInt(42)
-	x = MyInt(43)
-	s := MyStruct{Field1: "hello", Field2: 10}
-	// inspect: MyStruct, 1, s, s.Field1
-	_ = x
-	_ = s
-}
-`
 
 const inspectPrefix = "inspect:"
 
@@ -81,10 +59,10 @@ func printObj(fset *token.FileSet, pos token.Pos, name string, obj types.Object)
 	fmt.Println(formatObj(fset, obj))
 }
 
-func main() {
+func inspectCode(code string, fileName string) {
 	fset := token.NewFileSet()
 
-	f, err := parser.ParseFile(fset, "test.go", inspectCode, parser.ParseComments)
+	f, err := parser.ParseFile(fset, fileName, code, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +71,14 @@ func main() {
 		Importer: importer.Default(),
 	}
 
-	pkg, err := conf.Check("main", fset, []*ast.File{f}, nil)
+	pkg := types.NewPackage("main", "")
+
+	info := &types.Info{
+		// Types: make(map[ast.Expr]types.TypeAndValue)
+	}
+	checker := types.NewChecker(&conf, fset, pkg, info)
+
+	err = checker.Files([]*ast.File{f})
 	if err != nil {
 		panic(err)
 	}
@@ -111,5 +96,26 @@ func main() {
 			_, obj := scope.LookupParent(name, pos)
 			printObj(fset, pos, name, obj)
 		}
+	}
+}
+
+func inspectFile(file string) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+	filename := filepath.Base(file)
+	inspectCode(string(data), filename)
+}
+
+func main() {
+	if len(os.Args) <= 1 {
+		fmt.Println("usage: inspect <file.go>")
+		return
+	}
+
+	for _, file := range os.Args[1:] {
+		fmt.Printf("Inspecting file: %s\n", file)
+		inspectFile(file)
 	}
 }
