@@ -225,7 +225,7 @@ Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen au
 	var d MySlice
 
 	c = d // Erlaubt: zugrunde liegender Typ ist gleich ([]int) und c ist kein benannter Typ
-		```
+	```
 
 - Weitere spezielle Regeln für bestimmte Typen (z.B. Schnittstellen, Funktionen, etc.).
 Um zu überprüfen, ob zwei Typen zueinander zuweisbar sind, stellt das `go/types`-Package die Funktion `types.AssignableTo(V, T Type) bool` bereit.
