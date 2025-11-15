@@ -5,6 +5,11 @@ on:
     pull_request:
         branches:
         - main
+
+permissions:
+    contents: write
+    packages: write
+
 jobs:
     build_pdf:
         env:
@@ -29,6 +34,10 @@ jobs:
         - name: Generate Table of Contents
           run: |
             markdown-toc -i README.md
+        - name: Add GitHub Ref to README
+          run: |
+            GITHUB_REF_TEXT="*** \n\n_Github Ref \`${{ github.ref }}\`_"
+            echo -e "\n$GITHUB_REF_TEXT" >> README.md
         - name: Build PDF
           run: |
             pandoc README.md -o documentation.pdf --pdf-engine=wkhtmltopdf --css=./assets/pdf_style.css \
@@ -39,4 +48,4 @@ jobs:
           uses: ncipollo/release-action@v1
           with:
             artifacts: "documentation.pdf"
-            tag: pdf-build-${{ github.run_id }}
+            tag: pdf-build-${{ github.ref }}
