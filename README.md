@@ -160,7 +160,7 @@ Jedes deklarierte Element in Go wird im Typechecker durch ein `types.Object` rep
 
 - `Parent() *Scope`: Gibt den Gültigkeitsbereich zurück, in dem das Objekt deklariert ist (z.B. Paket- oder Funktionsscope).
 - `Pkg() *Package`: Gibt das Paket zurück, zu dem das Objekt gehört. `nil` für Objekte im `universe`-Scope (vordefinierte Typen und Funktionen).
-- `Id() string`: Gibt eine eindeutige Kennung für das Objekt zurück. Zwei IDs sind genau dann verschieden, wenn dieses unterschiedliche Namen habend, oder in unterschiedlichen Paketen deklariert und nicht exportiert sind ([Uniqueness of identifiers](https://go.dev/ref/spec#Uniqueness_of_identifiers)). Für _nicht_ exportierte Objekte wird daher die Paketkennung in die ID einbezogen, um Kollisionen zu vermeiden.
+- `Id() string`: Gibt eine eindeutige Kennung für das Objekt zurück. Zwei IDs sind genau dann verschieden, wenn dieses unterschiedliche Namen habend, oder in unterschiedlichen Paketen deklariert und nicht exportiert sind (_[Uniqueness of identifiers](https://go.dev/ref/spec#Uniqueness_of_identifiers)_). Für _nicht_ exportierte Objekte wird daher die Paketkennung in die ID einbezogen, um Kollisionen zu vermeiden.
 
 #### Wichtige `types.Object`-Implementierungen
 - `*types.Var`: Repräsentiert eine Variable (lokal, global oder Feld in einem Struct).
@@ -200,8 +200,56 @@ Das `types.Type`-Interface definiert nur wenige Methoden, da Typen sehr untersch
 - `*types.Signature`: Repräsentiert Funktions- und Methodensignaturen.
 - `*types.Named`: Repräsentiert benannte Typen, die durch `type`-Deklarationen definiert sind.
 
+> Achtung: Nach der Go-Spezifikation sind primitive Typen wie `int` und `string` ebenfalls benannte Typen, da sie durch `type`-Deklarationen definiert sind. Im Go Typechecker werden diese jedoch als `*types.Basic` repräsentiert, um ihre spezielle Rolle als primitive Typen zu verdeutlichen.
 
-## Quellen und weiterführende Literatur:
+#### Komaptibilität von Typen
+Um zu überprüfen, ob zwei Typen miteinander kompatibel sind, unterscheided Go zwischen drei Beziehungen von Typen. Für jede dieser Beziehungen stellt der `go/types`-Package entsprechende Funktionen bereit
+##### Zuweisbarkeit
+Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen auch Funktionsaufrufe mit Parametern, Map-Zugriff, etc.) verwendet werden können. Für zwei Typen `T` und `V` ist `V` zuweisbar zu `T`, wenn eines der folgenden Kriterien erfüllt ist (Auswahl):
+	 - `V` und `T` sind identisch.
+	 - `V` und `T` haben den gleichen zugrunde liegenden Typ und mindestens einer von `T` oder `V` ist kein benannter Typ.
+		> Achtung: Benannte Typen bezieht sich hier auf die durch Definition der Go-Spezifikation, nicht auf die vom Typecheker verwendeten `*types.Named`. Daher sind `int`, `string`, etc. auch benannte Typen.
+		```go
+		type MyInt int
+		var a int
+		var b MyInt
+
+		a = b // Nicht erlaubt: auf beiden Seiten sind benannte Typen
+
+
+		type MySlice []int
+		var c []int
+		var d MySlice
+
+		c = d // Erlaubt: zugrunde liegender Typ ist gleich ([]int) und c ist kein benannter Typ
+		```
+	 - Weitere spezielle Regeln für bestimmte Typen (z.B. Schnittstellen, Funktionen, etc.).
+Um zu überprüfen, ob zwei Typen zueinander zuweisbar sind, stellt das `go/types`-Package die Funktion `types.AssignableTo(V, T Type) bool` bereit.
+
+##### Vergleichbarkeit
+Regelt, ob ein Type mit `==` oder `!=` verglichen werden kann. Primitive Typen und Pointer sind beispielsweise immer vergleichbar, während Structs und Arrays nur unter bestimmten Bedingungen vergleichbar sind. Damit ein Struct vergleichbar ist, müssen alle seine Felder vergleichbar sein. Arrays sind vergleichbar, wenn ihr Elementtyp vergleichbar ist. Slices, Maps und Funktionen sind niemals vergleichbar.
+
+Um zu überprüfen, ob ein Typ vergleichbar ist, stellt das `go/types`-Package die Funktion `types.Comparable(T Type) bool` bereit.
+
+##### Umwandlungsfähigkeit
+Regelt, ob ein Wert von einem Type in einen anderen Type umgewandelt werden kann. Umwandlungen können sowohl explizit (z.B. `T(v)`) als auch implizit (z.B. bei Funktionsaufrufen) erfolgen. Ein Wert `x` kann dann in einen Typ `T` umgewandelt werden, wenn eines der folgenden Kriterien erfüllt ist (Auswahl):
+		- `x` ist zuweisbar zu `T`.
+		- `x` ist ein `string` und `T` ist ein `[]byte` oder `[]rune` (und umgekehrt).
+		- `x` und `T` sind beide numerische Typen (z.B. `int`, `float64`, etc.).
+		- Weitere spezielle Regeln für bestimmte Typen (z.B. Typeparameter, Pointer, etc.).
+
+Um zu überprüfen, ob ein Typ in einen anderen Typ umgewandelt werden kann, stellt das `go/types`-Package die Funktion `types.ConvertibleTo(V, T Type) bool` bereit.
+
+### Verbindung von AST und Typechecker
+Mit dem `types.Type` und `types.Object` fehlt dem Typechecker noch die Verbindung zum Quellcode. Diese Verbindung wird durch das `types.Info`-Struct hergestellt, das während des Typecheckings mit Informationen über die Typen und Objekte im Quellcode gefüllt wird. Das `types.Info`-Struct enthält mehrere Maps, die verschiedene Aspekte des Quellcodes abbilden. Die wichtigsten davon sind:
+- `Types map[ast.Expr]types.TypeAndValue`: Verknüpft jeden AST-Ausdruck (`ast.Expr`) mit seinem Typ und Wert (nur für Kosntanten).
+- `Defs map[*ast.Ident]types.Object`: Verknüpft jede Identifier-Deklaration (`*ast.Ident`) mit dem entsprechenden Objekt (`types.Object`).
+- `Uses map[*ast.Ident]types.Object`: Verknüpft jede Identifier-Verwendung (`*ast.Ident`) mit dem entsprechenden Objekt (`types.Object`).
+- `Scopes map[ast.Node]*types.Scope`: Verknüpft jeden AST-Knoten, der einen Gültigkeitsbereich definiert (z.B. Funktionen, Blöcke), mit dem entsprechenden Scope (`types.Scope`).
+
+Mit diesen Feldern ist das `types.Info`-Struct die zentrale Verbindung zwischen dem abstrakten Syntaxbaum (AST) und den Typinformationen, die vom Typechecker generiert werden. Dadurch können Tools und Anwendungen detaillierte Analysen des Go-Codes durchführen, indem sie sowohl die Struktur des Codes als auch die zugehörigen Typinformationen berücksichtigen.
+
+## Quellen und weiterführende Literatur
 - [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
 - [`go/types`: The Go Type Checker](https://github.com/golang/example/tree/7f05d217867b2af52b0a28c6d1c91df97e1b5b39/gotypes)
 - [Updating tools to support type parameters](https://github.com/golang/exp/tree/a4bb9ffd2546b4ac9773d60f1e9a6ff4ba82ad23/typeparams/example)
