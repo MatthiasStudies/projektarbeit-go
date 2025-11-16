@@ -175,9 +175,9 @@ Objekte sind kanonisch, d.h. es gibt genau ein `types.Object` für jede deklarie
 Der Go Typechecker verwendet Scopes (`types.Scope`), um Objekte zu organisieren und den Gültigkeitsbereich von Bezeichnern zu verwalten. Jeder Scope wird durch einen lexikalischen Block im Quellcode beschrieben (z.B. ein Paket, eine Funktion oder ein Codeblock), in dem Bezeichner deklariert und verwendet werden können. 
 
 #### Scope Hierarchie
-Scopes sind hierarchisch organisiert, wobei jeder Scope einen übergeordneten Scope hat. 
+Scopes sind hierarchisch organisiert, wobei jeder i.d.R. jeder Scope einen übergeordneten Scope hat. 
 
-1. **`universe`-Scope (root)**: Der globale `types.Universe`-Scope enthält vordefinierte Typen und Funktionen (z.B. `int`, `string`, `println`). Dieser sollte niemals verändert werden.
+1. **`universe`-Scope (root)**: Der globale `types.Universe`-Scope enthält vordefinierte Typen und Funktionen (z.B. `int`, `string`, `println`). Dieser sollte niemals verändert werden. Der `universe`-Scope hat als einziger Scope keinen übergeordneten Scope.
 2. **`package`-Scope**: Jeder Paket-Scope enthält alle Objekte, die in einem bestimmten Paket deklariert sind. Jedes Paket hat seinen eigenen Scope, und hat den `universe`-Scope als übergeordnet.
 3. **Datei-Scope**: Jede Quellcodedatei (`*ast.File`) hat ihren eigenen Scope, der den enstprechenden Paket-Scope als übergeordneten Scope hat.
 4. **Blocklevel-Scopes**: Jede Kontrollanweisung oder Funktion hat ihren eigenen Scope, der den übergeordneten Scope (z.B. Datei-Scope ) als übergeordneten Scope hat. Geschachtelte Blöcke (z.B. Schleifen, `if`-Anweisungen) haben ebenfalls eigene Scopes, die den Scope der umgebenden Funktion oder des Blocks untergeordnet sind.
