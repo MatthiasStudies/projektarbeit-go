@@ -157,7 +157,6 @@ Jedes deklarierte Element in Go wird im Typechecker durch ein `types.Object` rep
 - `Exported() bool`: Gibt zurück, ob das Objekt exportiert ist (d.h. ob es mit einem Großbuchstaben beginnt).
 - `Type() Type`: Gibt den Typ des Objekts zurück (z.B. den Typ einer Variable oder die signatur einer Funktion).
 - `Pos() token.Pos`: Gibt die Position der Deklaration des Objekts im Quellcode zurück.
-
 - `Parent() *Scope`: Gibt den Gültigkeitsbereich zurück, in dem das Objekt deklariert ist (z.B. Paket- oder Funktionsscope).
 - `Pkg() *Package`: Gibt das Paket zurück, zu dem das Objekt gehört. `nil` für Objekte im `universe`-Scope (vordefinierte Typen und Funktionen).
 - `Id() string`: Gibt eine eindeutige Kennung für das Objekt zurück. Zwei IDs sind genau dann verschieden, wenn dieses unterschiedliche Namen habend, oder in unterschiedlichen Paketen deklariert und nicht exportiert sind (_[Uniqueness of identifiers](https://go.dev/ref/spec#Uniqueness_of_identifiers)_). Für _nicht_ exportierte Objekte wird daher die Paketkennung in die ID einbezogen, um Kollisionen zu vermeiden.
