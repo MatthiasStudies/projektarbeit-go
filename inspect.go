@@ -74,9 +74,7 @@ func inspectCode(code string, fileName string) {
 
 	pkg := types.NewPackage("main", "")
 
-	info := &types.Info{
-		// Types: make(map[ast.Expr]types.TypeAndValue)
-	}
+	info := &types.Info{}
 	checker := types.NewChecker(&conf, fset, pkg, info)
 
 	err = checker.Files([]*ast.File{f})

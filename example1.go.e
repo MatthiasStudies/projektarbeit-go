@@ -15,7 +15,9 @@ func main() {
 	x := MyInt(42)
 	x = MyInt(43)
 	s := MyStruct{Field1: "hello", Field2: 10}
-	// inspect: MyStruct, 1, s, s.Field1
+	// inspect: isEven
 	_ = x
 	_ = s
 }
+
+// inspect: x
