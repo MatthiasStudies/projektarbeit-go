@@ -107,6 +107,9 @@ Regelt, ob ein Wert von einem Type in einen anderen Type umgewandelt werden kann
 
 Um zu überprüfen, ob ein Typ in einen anderen Typ umgewandelt werden kann, stellt das `go/types`-Package die Funktion `types.ConvertibleTo(V, T Type) bool` bereit.
 
+##### Implementierungsdetails des Go Typecheckers
+Der Go Typechecker läd zu beginn eines Checks alle Objekte und Typen in den Arbeitsspeicher. Zuweisbarkeit, Vergleichbarkeit und Umwandlungsfähigkeit wird dabei **nicht** gecached. Beispielsweise wird bei jeder Struct-zu-Interface-Zuweisung erneut überprüft, ob das Struct alle geforderten Methoden des Interfaces implementiert. Da bereits alle Objekte im Speicher vorliegen, ist dies jedoch sehr schnell.
+
 ### Verbindung von AST und Typechecker
 Mit dem `types.Type` und `types.Object` fehlt dem Typechecker noch die Verbindung zum Quellcode. Diese Verbindung wird durch das `types.Info`-Struct hergestellt, das während des Typecheckings mit Informationen über die Typen und Objekte im Quellcode gefüllt wird. Das `types.Info`-Struct enthält mehrere Maps, die verschiedene Aspekte des Quellcodes abbilden. Die wichtigsten davon sind:
 - `Types map[ast.Expr]types.TypeAndValue`: Verknüpft jeden AST-Ausdruck (`ast.Expr`) mit seinem Typ und Wert (nur für Kosntanten).
