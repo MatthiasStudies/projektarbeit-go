@@ -1,12 +1,8 @@
 
 import os
 
-
-
 STRESS_MULTI = "stress_multi.gotest"
 STRESS_SINGLE ="stress_single.gotest"
-
-
 NUM_STRUCTS = 5_000
 
 t_multi = ""
@@ -34,10 +30,14 @@ for i in range(NUM_STRUCTS):
 
     write_both(f"func (s *Struct{i}) Method() string {{\n")
     write_both(f'    return "Struct{i} Method called"\n')
-    write_both("}\n\n")
+    write_both("}\n")
+    write_both(f"func (s *Struct{i}) Method2() {{}}\n")
+    write_both(f"func (s *Struct{i}) Method3() {{}}\n\n")
 
 write_both("type InterfaceStress1 interface {\n")
 write_both("    Method() string\n")
+write_both("    Method2()\n")
+write_both("    Method3()\n")
 write_both("}\n\n")
 write_both("func main() {\n")
 

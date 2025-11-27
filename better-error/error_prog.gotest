@@ -25,7 +25,5 @@ func f[T A](x T, y B) {
 }
 
 func main() {
-	// If uncommented, yields a type error.
 	f[Sb](Sa{}, Sb{})
-	// cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb]
 }

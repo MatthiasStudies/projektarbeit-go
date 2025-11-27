@@ -110,6 +110,8 @@ Um zu überprüfen, ob ein Typ in einen anderen Typ umgewandelt werden kann, ste
 ##### Implementierungsdetails des Go Typecheckers
 Der Go Typechecker läd zu beginn eines Checks alle Objekte und Typen in den Arbeitsspeicher. Zuweisbarkeit, Vergleichbarkeit und Umwandlungsfähigkeit wird dabei **nicht** gecached. Beispielsweise wird bei jeder Struct-zu-Interface-Zuweisung erneut überprüft, ob das Struct alle geforderten Methoden des Interfaces implementiert. Da bereits alle Objekte im Speicher vorliegen, ist dies jedoch sehr schnell.
 
+In einem kurzen Experiment lässt sich darstellen, dass der Go Typechecker Zuweisbarkeitsprüfungen nicht cached. Siehe dazu den Ordner [`stress-test`](./stress-test/) für weitere Informationen.
+
 ### Verbindung von AST und Typechecker
 Mit dem `types.Type` und `types.Object` fehlt dem Typechecker noch die Verbindung zum Quellcode. Diese Verbindung wird durch das `types.Info`-Struct hergestellt, das während des Typecheckings mit Informationen über die Typen und Objekte im Quellcode gefüllt wird. Das `types.Info`-Struct enthält mehrere Maps, die verschiedene Aspekte des Quellcodes abbilden. Die wichtigsten davon sind:
 - `Types map[ast.Expr]types.TypeAndValue`: Verknüpft jeden AST-Ausdruck (`ast.Expr`) mit seinem Typ und Wert (nur für Kosntanten).
@@ -118,6 +120,34 @@ Mit dem `types.Type` und `types.Object` fehlt dem Typechecker noch die Verbindun
 - `Scopes map[ast.Node]*types.Scope`: Verknüpft jeden AST-Knoten, der einen Gültigkeitsbereich definiert (z.B. Funktionen, Blöcke), mit dem entsprechenden Scope (`types.Scope`).
 
 Mit diesen Feldern ist das `types.Info`-Struct die zentrale Verbindung zwischen dem abstrakten Syntaxbaum (AST) und den Typinformationen, die vom Typechecker generiert werden. Dadurch können Tools und Anwendungen detaillierte Analysen des Go-Codes durchführen, indem sie sowohl die Struktur des Codes als auch die zugehörigen Typinformationen berücksichtigen.
+
+### Verbsserung von Typeerrors
+Der Go Compiler gibt bei Typefehlern nur sehr allgemeine Fehlermeldungen aus, die oft wenig hilfreich sind, um die genaue Ursache des Problems zu identifizieren. Durch die Verwendung des `go/types`-Packages könnte es möglich sein, detailliertere und präzisere Fehlermeldungen zu generieren. Eine einfache Implementierung könnte zunächst den Context der Fehlerstelle dargestellt werden. Ein kleines Beispiel befindet sich im [`better-error`](./better-error/) Ordner:
+
+```bash
+cd better-error
+go run better_error.go error_prog.gotest
+```
+```
+Type error in .\error_prog.gotest at line 28, column 11:
+    18 | func (x Sb) m1() {}
+    19 | func (x Sb) m2() {}
+    20 | 
+    21 | // Some generic function.
+    22 | func f[T A](x T, y B) {
+    23 |     y.m2()
+    24 |     x.m1()
+    25 | }
+    26 | 
+    27 | func main() {
+>   28 |     f[Sb](Sa{}, Sb{})
+       |           ^^---- Here
+    29 | }
+    30 | 
+Error: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb]
+```
+Dies könnte nun erweitert werden, um über die AST-Struktur weitere Hinweise zu geben, z.B. welche Methoden fehlen, welche Typen erwartet wurden, etc.
+
 
 ## Quellen und weiterführende Literatur
 - [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)

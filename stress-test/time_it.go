@@ -47,7 +47,7 @@ func timeFile(filename string) {
 
 	var times []float64
 
-	for i := 0; i < ITER_COUNT; i++ {
+	for range ITER_COUNT {
 		elapsed := timeTypechecking(f, fset)
 		times = append(times, elapsed)
 	}
