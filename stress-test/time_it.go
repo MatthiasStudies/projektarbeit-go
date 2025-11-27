@@ -71,7 +71,7 @@ func timeFile(filename string) {
 
 func main() {
 	if len(os.Args) < 2 {
-		panic("expected one argument")
+		panic("expected at least one filename as argument")
 	}
 
 	for _, filename := range os.Args[1:] {
