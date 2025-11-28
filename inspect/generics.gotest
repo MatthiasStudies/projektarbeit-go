@@ -1,0 +1,21 @@
+package main
+
+type Shape interface {
+	size()
+}
+
+type Square struct{}
+
+func (m Square) size() {}
+
+type Circle struct{}
+
+func (m Circle) size() {}
+
+func f[T Shape](x T, y Circle) {
+	x = y // Nicht erlaubt, da T nach der Instanziierung kein Interface mehr ist
+}
+
+func main() {
+	f[Square](Square{}, Circle{}) // Aufruf der generischen Funktion
+}

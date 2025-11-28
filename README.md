@@ -121,7 +121,7 @@ Mit dem `types.Type` und `types.Object` fehlt dem Typechecker noch die Verbindun
 
 Mit diesen Feldern ist das `types.Info`-Struct die zentrale Verbindung zwischen dem abstrakten Syntaxbaum (AST) und den Typinformationen, die vom Typechecker generiert werden. Dadurch können Tools und Anwendungen detaillierte Analysen des Go-Codes durchführen, indem sie sowohl die Struktur des Codes als auch die zugehörigen Typinformationen berücksichtigen.
 
-### Verbsserung von Typeerrors
+### Verbesserung von Typeerrors
 Der Go Compiler gibt bei Typefehlern nur sehr allgemeine Fehlermeldungen aus, die oft wenig hilfreich sind, um die genaue Ursache des Problems zu identifizieren. Durch die Verwendung des `go/types`-Packages könnte es möglich sein, detailliertere und präzisere Fehlermeldungen zu generieren. Eine einfache Implementierung könnte zunächst den Context der Fehlerstelle dargestellt werden. Ein kleines Beispiel befindet sich im [`better-error`](./better-error/) Ordner:
 
 ```bash
@@ -148,6 +148,54 @@ Error: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb
 ```
 Dies könnte nun erweitert werden, um über die AST-Struktur weitere Hinweise zu geben, z.B. welche Methoden fehlen, welche Typen erwartet wurden, etc.
 
+
+### Generics in Go's Typensystem
+
+Mit der Einführung von Generics in Go 1.18 wurde das Typensystem von Go erheblich erweitert. Generics ermöglichen es, Funktionen und Datentypen zu definieren, die mit verschiedenen Typen arbeiten können, ohne dass der Code für jeden Typ dupliziert werden muss. Dies wird durch die Verwendung von Typparametern erreicht, die als Platzhalter für konkrete Typen dienen. Für eine genauere Beschreibung von Generis, siehe [generics.md](./generics.md).
+
+Für die Implementierung von Generics verwendet der Go Compilter Monomorphisierung. Das bedeutet, dass für jede Instanziierung einer generischen Funktion oder eines generischen Typs eine sperate Version des Codes mit dem konkreten Typ generiert wird. Generics werden also zur Compile-Zeit aufgelöst und fungieren damit lediglich als eine Art Kurzschreibweise für wiederverwendbaren Code.
+
+#### Konsequenzen des Monomorphisierungsansatzes
+
+- **Kein Laufzeit-Overhead**: Da Generics zur Compile-Zeit aufgelöst werden, gibt es keinen Laufzeit-Overhead durch Typparameter oder Typinformationen. Der generische Code wird in spezialisierten Versionen für jeden konkreten Typ kompiliert, was zu optimiertem Maschinencode führt.
+- **Code-Duplizierung / Binärgrößenzunahme**: Jede Instanziierung einer generischen Funktion oder eines generischen Typs führt zu einer separaten Kopie des Codes. Dies kann zu einer erhöhten Binärgröße führen, insbesondere wenn viele verschiedene Typen verwendet werden.
+- **Eingeschänkte Zuweisbarkeit trotz Constraint**: Da Generics zur Compile-Zeit aufgelöst werden, verschwinden Constraints nach der Instanziierung. Dadurch sind z.B. Zuweisungen eines konkreten Structs zu einer Generischen Variable, wessen Typ durch ein Interface-Constraint eingeschränkt ist, nicht erlaubt, selbst wenn das Struct alle Methoden des Interface implementiert: 
+	```go
+	type Shape interface {
+			size()
+	}
+
+	type Square struct{}
+	func (m Square) size() {}
+
+	type Circle struct{}
+	func (m Circle) size() {}
+
+	func f[T Shape](x T, y Circle) {
+			x = y // Nicht erlaubt, da T nach der Instanziierung kein Interface mehr ist
+	}
+
+	...
+
+	func main() {
+		f[Square](Square{}, Circle{}) // Aufruf der generischen Funktion
+	}
+	```
+	Der Go-Compiler überstzt die generische Funktion dann in etwa so:
+	```go
+	func f_Square(x Square, y Circle) {
+			x = y // Nicht erlaubt, da Square nicht Circle und auch kein subtype davon ist
+	}
+	```
+
+	Wie im Beispiel zu sehen, verschwindet das Interface-Constraint `Shape` nach der Instanziierung, und `T` wird zu `Square`. Daher ist die Zuweisung von `y` (vom Typ `Circle`) zu `x` (vom Typ `Square`) nicht erlaubt, da `Square` und `Circle` unterschiedliche Typen sind und keine direkte Zuweisbarkeit besteht.
+
+#### Kontrast zu anderen Sprachen
+
+Viele Programmiersprachen, welche Generics unterstützen, verwenden stattdessen Typ-Erasure. Dabei werden Typparameter zur Laufzeit durch einen allgemeinen Typ (z.B. `Object` in Java) ersetzt, und Typinformationen gehen verloren. Dies ermöglicht eine flexiblere Zuweisbarkeit und Interoperabilität zwischen verschiedenen Typen, führt jedoch zu Laufzeit-Overhead und potenziellen Performance-Einbußen.
+
+**Der Vorteil von Go's Monomorphisierungsansatz** liegt in der Kombination aus hoher Performance (kein Laufzeit-Overhead) und Typsicherheit zur Compile-Zeit. Allerdings erfordert dieser Ansatz ein tieferes Verständnis der Typensystemregeln (was zu Verwirrungen führen kann) und kann zu größeren Binärdateien führen.
+**Der Nachteil** ist die eingeschränkte Flexibilität bei der Zuweisbarkeit und die Notwendigkeit, den Code für verschiedene Typen zu duplizieren.
 
 ## Quellen und weiterführende Literatur
 - [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
