@@ -21,9 +21,9 @@ const ansiiBold = "\033[1m"
 
 const extraContextLines = 10
 
-func handleTypeError(e types.Error, fiels map[string]*sourceFile, fset *token.FileSet) {
+func handleTypeError(e types.Error, files map[string]*sourceFile, fset *token.FileSet) {
 	pos := fset.Position(e.Pos)
-	file, ok := fiels[pos.Filename]
+	file, ok := files[pos.Filename]
 	if !ok {
 		panic("file content not found")
 	}
@@ -97,11 +97,16 @@ type sourceFile struct {
 	astFile *ast.File
 }
 
+func r() *int {
+	return *new(*int)
+}
+
 func parseFile(m map[string]*sourceFile, fset *token.FileSet, filename string) (*sourceFile, error) {
 	contentRaw, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
+
 	content := strings.ReplaceAll(string(contentRaw), "\t", "    ")
 	astFile, err := parser.ParseFile(fset, filename, content, parser.AllErrors)
 	if err != nil {
@@ -118,11 +123,6 @@ func parseFile(m map[string]*sourceFile, fset *token.FileSet, filename string) (
 
 func checkFile(filename string) {
 	files := map[string]*sourceFile{}
-	// content, err := os.ReadFile(filename)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// files[filename] = string(content)
 
 	fset := token.NewFileSet()
 

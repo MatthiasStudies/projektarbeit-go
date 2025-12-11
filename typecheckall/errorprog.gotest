@@ -1,0 +1,51 @@
+package main
+
+type A interface {
+	m1()
+}
+
+type B interface {
+	m1()
+	m2()
+}
+
+type Sa struct{}
+
+type Sb struct{}
+
+func (x Sa) m1() {}
+
+func (x Sb) m1() {}
+func (x Sb) m2() {}
+
+// Some generic function.
+func f[T A](x T, y B) {
+	y.m2()
+	x.m1()
+}
+
+//func e100(t string[T]) {
+//	print(t)
+//}
+
+func e1() (bool, error) {
+	var s string
+	s = 123
+	return false, nil
+}
+func e3() (*B, error) {
+	asd = 123
+	return new(B), nil
+}
+
+func e2() {
+	print("hello")
+	var t string
+	t = 312
+}
+
+func main() {
+	e1()
+	e2()
+	//f[Sb](Sa{}, Sb{})
+}

@@ -1,0 +1,8 @@
+package main
+
+type MyStruct struct {
+}
+
+func main() {
+	a := *new(MyStruct)
+}

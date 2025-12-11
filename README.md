@@ -153,7 +153,7 @@ Dies könnte nun erweitert werden, um über die AST-Struktur weitere Hinweise zu
 
 Mit der Einführung von Generics in Go 1.18 wurde das Typensystem von Go erheblich erweitert. Generics ermöglichen es, Funktionen und Datentypen zu definieren, die mit verschiedenen Typen arbeiten können, ohne dass der Code für jeden Typ dupliziert werden muss. Dies wird durch die Verwendung von Typparametern erreicht, die als Platzhalter für konkrete Typen dienen. Für eine genauere Beschreibung von Generis, siehe [generics.md](./generics.md).
 
-Für die Implementierung von Generics verwendet der Go Compilter Monomorphisierung. Das bedeutet, dass für jede Instanziierung einer generischen Funktion oder eines generischen Typs eine sperate Version des Codes mit dem konkreten Typ generiert wird. Generics werden also zur Compile-Zeit aufgelöst und fungieren damit lediglich als eine Art Kurzschreibweise für wiederverwendbaren Code.
+Für die Implementierung von Generics verwendet der Go Compiller Monomorphisierung. Das bedeutet, dass für jede Instanziierung einer generischen Funktion oder eines generischen Typs eine sperate Version des Codes mit dem konkreten Typ generiert wird. Generics werden also zur Compile-Zeit aufgelöst und fungieren damit lediglich als eine Art Kurzschreibweise für wiederverwendbaren Code.
 
 #### Konsequenzen des Monomorphisierungsansatzes
 
