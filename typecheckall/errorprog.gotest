@@ -13,7 +13,10 @@ type Sa struct{}
 
 type Sb struct{}
 
-func (x Sa) m1() {}
+func (x Sa) m1() {
+	var s string
+	s = 567
+}
 
 func (x Sb) m1() {}
 func (x Sb) m2() {}
