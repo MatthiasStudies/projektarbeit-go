@@ -197,6 +197,67 @@ Viele Programmiersprachen, welche Generics unterstützen, verwenden stattdessen 
 **Der Vorteil von Go's Monomorphisierungsansatz** liegt in der Kombination aus hoher Performance (kein Laufzeit-Overhead) und Typsicherheit zur Compile-Zeit. Allerdings erfordert dieser Ansatz ein tieferes Verständnis der Typensystemregeln (was zu Verwirrungen führen kann) und kann zu größeren Binärdateien führen.
 **Der Nachteil** ist die eingeschränkte Flexibilität bei der Zuweisbarkeit und die Notwendigkeit, den Code für verschiedene Typen zu duplizieren.
 
+## Mehrere Typefehler eines Programms finden
+
+Eine Schwierigkeit bei der Verwendung des Go Typecheckers besteht darin, dass dieser maximal einen Fehler pro Durchlauf meldet.
+Dies liegt daran, dass der Typechecker bei einem Fehler den aktuellen Überprüfungsprozess abbricht, um inkonsistente Zustände zu vermeiden. 
+Wenn man also mehrere Typefehler in einem Programm finden möchte, muss man sich etwas einfallen lassen.
+
+### Die Idee
+Um mehrere Typefehler in einem einzigen Programm zu finden, lässt man zunächst den Typechecker normal laufen. Wenn ein Fehler gefunden wird, 
+wir die Funktion ermittelt, in der der Fehler aufgetreten ist. Anschließend wird eine neue Version des Programmes erstellt,
+in welcher die fehlerhafte Funktion durch eine Dummy-Implementierung ersetzt wird. Anschließend wird der Typechecker erneut auf das modifizierte Programm angewendet.
+Dieser Prozess wird wiederholt, bis keine weiteren Fehler mehr gefunden werden.
+
+### Implementierung
+Eine einfache Implementierung dieser Idee befindet sich im Ordner [`typecheckall`](./typecheckall/).
+```bash
+cd typecheckall
+go run main.go errorprog.gotest
+```
+```
+Type error at line 18, column 7: cannot use 567 (untyped int constant) as string value in assignment
+  s = 567
+      ^
+Type error at line 37, column 7: cannot use 123 (untyped int constant) as string value in assignment
+  s = 123
+      ^
+Type error at line 41, column 3: undefined: asd
+  asd = 123
+  ^
+Type error at line 48, column 7: cannot use 312 (untyped int constant) as string value in assignment
+  t = 312
+      ^
+Type error at line 54, column 9: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb]
+  f[Sb](Sa{}, Sb{})
+        ^
+```
+
+Im `checker`-Unterpackage befinden sich die eigentliche Logik, mit zwei Implementierungen, welche sich minimal unterscheiden:
+
+- Der `TextBasedChecker` arbeitet komplett mit dem Quellcode als Text und manipuliert diesen direkt.
+- Der `ASTBasedChecker` verwendet stattdessen den AST, um die fehlerhaften Funktionen zu identifizieren und zu ersetzen.
+Der AST-basierte Ansatz ist robuster, da er nicht auf Textmuster angewiesen ist, die möglicherweise nicht alle Fälle abdecken.
+
+Für beide Implementierung sieht der Ablauf wie folgt aus:
+
+1. **Initiales Typechecking**: Der Typechecker wird auf das ursprüngliche Programm angewendet.
+2. **Fehlererkennung**: Wenn ein Typefehler gefunden wird, wird die Funktion ermittelt, in der der Fehler aufgetreten ist. Die Position innerhalb der Funktion, sowie der Funktionsname werden gespeichert.
+3. **Funktion ersetzen**: Die fehlerhafte Funktion wird durch eine Dummy-Implementierung ersetzt. 
+Diese Dummy-Implementierung hat die gleiche Signatur wie die Originalfunktion, enthält jedoch keinen Code, außer einem `return`-Statement (falls erforderlich). 
+Um passende Werte für das Return-Statement zu generieren, Gos `new`-Funktion verwendet, welche für einen gegebenen Typ einen Nullwert erzeugt. 
+Dies funktioniert sogar für Interfaces, was die Implementierung vereinfacht.
+4. **Erneutes Typechecking**: Der Typechecker wird erneut auf das modifizierte Programm angewendet.
+5. **Wiederholung**: Die Schritte 2-4 werden wiederholt, bis keine weiteren Typefehler mehr gefunden werden.
+6. **Fehlerausgabe**: Alle gefundenen Typefehler werden gesammelt und am Ende ausgegeben.
+
+#### Probleme und Einschränkungen
+- **Fehler in Funktionssignaturen**: Wenn der Typefehler in der Signatur einer Funktion auftritt, kann die Funktion nicht korrekt ersetzt werden. 
+Um eine Endlosschleife zu vermeiden, wird intern eine Liste von bereits ersetzten Funktionen geführt. Bei einem erneuten Fehler in der gleichen Funktion das Programm abgebrochen.
+- **Fehler außerhalb von Funktionen**: Typefehler, die außerhalb von Funktionen auftreten (z.B. in globalen Variablen oder Konstanten), können nicht durch das Ersetzen von Funktionen behoben werden. Das Programm wird in diesem Fall ebenfalls abgebrochen.
+- **Mehrere Fehler in einer Funktion**: Wenn mehrere Typefehler in der gleichen Funktion auftreten, wird nur der erste Fehler gefunden. Dies ist eine bewusste Limitierung, um die Komplexität der Implementierung zu reduzieren. 
+Theoretisch wäre aber eine Variante denkbar, welche nur Teile einer Funktion ersetzt, um mehrere Fehler in der gleichen Funktion zu finden.
+
 ## Quellen und weiterführende Literatur
 - [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
 - [`go/types`: The Go Type Checker](https://github.com/golang/example/tree/7f05d217867b2af52b0a28c6d1c91df97e1b5b39/gotypes)
@@ -207,3 +268,4 @@ Viele Programmiersprachen, welche Generics unterstützen, verwenden stattdessen 
 
 ## Angaben zur Nutzung von KI
 Einige Inhalte dieses Dokuments wurden mit Unterstützung von KI-Technologien recherchiert und verfasst. Dabei kamen insbesondere Sprachmodelle wie Google Gemini und Copilot zum Einsatz. Diese Technologien halfen dabei, Informationen zu strukturieren, Codebeispiele zu generieren und komplexe Konzepte verständlich darzustellen. Trotz sorgfältiger Überprüfung durch den Autor können Fehler oder Ungenauigkeiten nicht vollständig ausgeschlossen werden. Der Autor übernimmt die volle Verantwortung für den Inhalt dieses Dokuments.
+

@@ -34,7 +34,8 @@ func checkFile(filename string) {
 
 	content := strings.ReplaceAll(string(contentRaw), "\t", "  ")
 
-	c, err := checker.NewTextBasedChecker(content)
+	c, err := checker.NewASTBasedChecker(content)
+	//c, err := checker.NewTextBasedChecker(content)
 	if err != nil {
 		panic(err)
 	}

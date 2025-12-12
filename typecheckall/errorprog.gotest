@@ -27,6 +27,7 @@ func f[T A](x T, y B) {
 	x.m1()
 }
 
+// This triggers an error in the function signatur, thus exiting the checker program early.
 //func e100(t string[T]) {
 //	print(t)
 //}
@@ -58,5 +59,4 @@ func e4() (int, MyStruct, *MyStruct, error, B) {
 func main() {
 	e1()
 	e2()
-	//f[Sb](Sa{}, Sb{})
 }
