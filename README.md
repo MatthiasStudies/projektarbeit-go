@@ -216,19 +216,19 @@ cd typecheckall
 go run main.go errorprog.gotest
 ```
 ```
-Type error at line 18, column 7: cannot use 567 (untyped int constant) as string value in assignment
+Type error in function `m1` at line 18, column 7: cannot use 567 (untyped int constant) as string value in assignment
   s = 567
       ^
-Type error at line 37, column 7: cannot use 123 (untyped int constant) as string value in assignment
+Type error in function `e1` at line 37, column 7: cannot use 123 (untyped int constant) as string value in assignment
   s = 123
       ^
-Type error at line 41, column 3: undefined: asd
+Type error in function `e3` at line 41, column 3: undefined: asd
   asd = 123
   ^
-Type error at line 48, column 7: cannot use 312 (untyped int constant) as string value in assignment
+Type error in function `e2` at line 48, column 7: cannot use 312 (untyped int constant) as string value in assignment
   t = 312
       ^
-Type error at line 54, column 9: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb]
+Type error in function `e4` at line 54, column 9: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb]
   f[Sb](Sa{}, Sb{})
         ^
 ```
@@ -245,11 +245,11 @@ Für beide Implementierung sieht der Ablauf wie folgt aus:
 2. **Fehlererkennung**: Wenn ein Typefehler gefunden wird, wird die Funktion ermittelt, in der der Fehler aufgetreten ist. Die Position innerhalb der Funktion, sowie der Funktionsname werden gespeichert.
 3. **Funktion ersetzen**: Die fehlerhafte Funktion wird durch eine Dummy-Implementierung ersetzt. 
 Diese Dummy-Implementierung hat die gleiche Signatur wie die Originalfunktion, enthält jedoch keinen Code, außer einem `return`-Statement (falls erforderlich). 
-Um passende Werte für das Return-Statement zu generieren, Gos `new`-Funktion verwendet, welche für einen gegebenen Typ einen Nullwert erzeugt. 
+Um passende Werte für das Return-Statement zu generieren, wird Gos `new`-Funktion verwendet, welche für einen gegebenen Typ einen Nullwert erzeugt. 
 Dies funktioniert sogar für Interfaces, was die Implementierung vereinfacht.
 4. **Erneutes Typechecking**: Der Typechecker wird erneut auf das modifizierte Programm angewendet.
 5. **Wiederholung**: Die Schritte 2-4 werden wiederholt, bis keine weiteren Typefehler mehr gefunden werden.
-6. **Fehlerausgabe**: Alle gefundenen Typefehler werden gesammelt und am Ende ausgegeben.
+6. **Fehlerausgabe**: Alle gefundenen Typefehler werden gesammelt und am Ende ausgegeben. Durch den gespeicherten Funktionsnamen und die Position kann die Fehlerstelle im Originalcode leicht gefunden werden.
 
 #### Probleme und Einschränkungen
 - **Fehler in Funktionssignaturen**: Wenn der Typefehler in der Signatur einer Funktion auftritt, kann die Funktion nicht korrekt ersetzt werden. 

@@ -63,9 +63,10 @@ func resolveErrors(code string, errors map[string]relativeFuncError) []Error {
 		}
 		functionPos := fset.Position(fn.Pos())
 		resolved = append(resolved, Error{
-			Line:   functionPos.Line + e.RelLine - 1,
-			Column: e.Column,
-			Msg:    e.Message,
+			FuncName: e.FuncName,
+			Line:     functionPos.Line + e.RelLine - 1,
+			Column:   e.Column,
+			Msg:      e.Message,
 		})
 	}
 

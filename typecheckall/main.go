@@ -18,7 +18,7 @@ func showError(column int) {
 func showErrors(code string, errors []checker.Error) {
 	lines := strings.Split(code, "\n")
 	for _, e := range errors {
-		fmt.Printf("Type error at line %d, column %d: %s\n", e.Line, e.Column, e.Msg)
+		fmt.Printf("Type error in function `%s` at line %d, column %d: %s\n", e.FuncName, e.Line, e.Column, e.Msg)
 		if e.Line-1 >= 0 && e.Line-1 < len(lines) {
 			fmt.Println(lines[e.Line-1])
 			showError(e.Column)
