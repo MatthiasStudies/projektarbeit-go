@@ -47,6 +47,14 @@ func e2() {
 	t = 312
 }
 
+type MyStruct struct{}
+
+func e4() (int, MyStruct, *MyStruct, error, B) {
+	f[Sb](Sa{}, Sb{})
+
+	return 0, MyStruct{}, new(MyStruct), nil, Sb{}
+}
+
 func main() {
 	e1()
 	e2()
