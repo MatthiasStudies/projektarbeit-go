@@ -41,9 +41,9 @@ type ASTBasedChecker struct {
 	fset *token.FileSet
 }
 
-func NewASTBasedChecker(code string) (Checker, error) {
+func NewASTBasedChecker(filename string, code string) (Checker, error) {
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, "file.go", code, parser.AllErrors)
+	f, err := parser.ParseFile(fset, filename, code, parser.AllErrors)
 	if err != nil {
 		return nil, err
 	}

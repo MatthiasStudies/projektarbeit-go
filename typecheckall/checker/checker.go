@@ -29,7 +29,8 @@ func getParentFunc(f *ast.File, node ast.Node) *ast.FuncDecl {
 
 func checkASTFile(f *ast.File, fset *token.FileSet) *types.Error {
 	conf := types.Config{
-		Importer: importer.For("source", nil),
+		Importer:                 importer.For("source", nil),
+		DisableUnusedImportCheck: true,
 	}
 
 	_, err := conf.Check("pkg", fset, []*ast.File{f}, nil)

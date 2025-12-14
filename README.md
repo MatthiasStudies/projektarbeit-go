@@ -252,6 +252,7 @@ Dies funktioniert sogar für Interfaces, was die Implementierung vereinfacht.
 6. **Fehlerausgabe**: Alle gefundenen Typefehler werden gesammelt und am Ende ausgegeben. Durch den gespeicherten Funktionsnamen und die Position kann die Fehlerstelle im Originalcode leicht gefunden werden.
 
 #### Probleme und Einschränkungen
+- **Entstehende Fehler durch das Ersetzen von Funktionen**: Wenn eine Funktion ersetzt wird, kann dies zu neuen Typefehlern führen, die zuvor nicht aufgetreten sind. Z.B. wenn eine fehlerhafte Funktion der einzige Ort war, an dem ein importiertes Paket verwendet wurde, und die Dummy-Implementierung dieses Paket nicht mehr verwendet. In diesem Fall würde der Typechecker einen Fehler melden, dass das Paket importiert, aber nicht verwendet wird. Die kann jedoch durch einen Konfigurationsparameter des Typecheckers `DisableUnusedImportCheck` verhindert werden.
 - **Fehler in Funktionssignaturen**: Wenn der Typefehler in der Signatur einer Funktion auftritt, kann die Funktion nicht korrekt ersetzt werden. 
 Um eine Endlosschleife zu vermeiden, wird intern eine Liste von bereits ersetzten Funktionen geführt. Bei einem erneuten Fehler in der gleichen Funktion das Programm abgebrochen.
 - **Fehler außerhalb von Funktionen**: Typefehler, die außerhalb von Funktionen auftreten (z.B. in globalen Variablen oder Konstanten), können nicht durch das Ersetzen von Funktionen behoben werden. Das Programm wird in diesem Fall ebenfalls abgebrochen.
