@@ -44,6 +44,8 @@ func checkFile(filename string) {
 	if err != nil {
 		panic(err)
 	}
+
+	// do something with the errors
 	showErrors(content, errors)
 }
 

@@ -1,5 +1,7 @@
 package main
 
+import _ "fmt"
+
 type A interface {
 	m1()
 }

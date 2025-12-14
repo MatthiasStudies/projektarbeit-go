@@ -22,7 +22,7 @@ type Error struct {
 	Msg      string
 }
 
-func toFuncError(e types.Error, function *ast.FuncDecl, fset *token.FileSet) relativeFuncError {
+func toError(e types.Error, function *ast.FuncDecl, fset *token.FileSet) relativeFuncError {
 	functionPos := fset.Position(function.Pos())
 	errorPos := fset.Position(e.Pos)
 

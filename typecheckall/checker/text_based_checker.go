@@ -50,9 +50,9 @@ type TextBasedChecker struct {
 	code string
 }
 
-func NewTextBasedChecker(code string) (Checker, error) {
+func NewTextBasedChecker(file string) (Checker, error) {
 	return &TextBasedChecker{
-		code: code,
+		code: file,
 	}, nil
 }
 
@@ -109,7 +109,7 @@ func (c *TextBasedChecker) collectErrors() (map[string]relativeFuncError, error)
 			return nil, fmt.Errorf("could not find parent function for error position")
 		}
 
-		funcError := toFuncError(*typeErr, function, fset)
+		funcError := toError(*typeErr, function, fset)
 
 		// Early exit if we've already processed this function, for example if the error is in the function signature
 		// which can't be removed.

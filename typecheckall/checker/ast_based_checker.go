@@ -1,7 +1,7 @@
 package checker
 
 import (
-	"errors"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -92,16 +92,16 @@ func (c *ASTBasedChecker) collectErrors() (map[string]relativeFuncError, error) 
 
 		nodes, exact := astutil.PathEnclosingInterval(c.f, typeErr.Pos, typeErr.Pos)
 		if !exact || len(nodes) == 0 {
-			return funcErrors, errors.New("could not find AST node for error position")
+			return funcErrors, fmt.Errorf("could not find AST node for error position (%w)", typeErr)
 		}
 
 		exprNode := nodes[0]
 		function := getParentFunc(c.f, exprNode)
 		if function == nil {
-			return funcErrors, errors.New("could not find parent function for error position")
+			return funcErrors, fmt.Errorf("could not find parent function for error position (%w)", typeErr)
 		}
 
-		funcError := toFuncError(*typeErr, function, c.fset)
+		funcError := toError(*typeErr, function, c.fset)
 
 		// Early exit if we've already processed this function, for example if the error is in the function signature
 		// which can't be removed.

@@ -29,15 +29,10 @@ func getParentFunc(f *ast.File, node ast.Node) *ast.FuncDecl {
 
 func checkASTFile(f *ast.File, fset *token.FileSet) *types.Error {
 	conf := types.Config{
-		Importer: importer.Default(),
+		Importer: importer.For("source", nil),
 	}
 
-	pkg := types.NewPackage("main", "")
-
-	info := &types.Info{}
-	checker := types.NewChecker(&conf, fset, pkg, info)
-
-	err := checker.Files([]*ast.File{f})
+	_, err := conf.Check("pkg", fset, []*ast.File{f}, nil)
 	if err == nil {
 		return nil
 	}
