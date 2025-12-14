@@ -233,13 +233,7 @@ Type error in function `e4` at line 54, column 9: cannot use Sa{} (value of stru
         ^
 ```
 
-Im `checker`-Unterpackage befinden sich die eigentliche Logik, mit zwei Implementierungen, welche sich minimal unterscheiden:
-
-- Der `TextBasedChecker` arbeitet komplett mit dem Quellcode als Text und manipuliert diesen direkt.
-- Der `ASTBasedChecker` verwendet stattdessen den AST, um die fehlerhaften Funktionen zu identifizieren und zu ersetzen.
-Der AST-basierte Ansatz ist robuster, da er nicht auf Textmuster angewiesen ist, die möglicherweise nicht alle Fälle abdecken.
-
-Für beide Implementierung sieht der Ablauf wie folgt aus:
+Im `checker`-Unterpackage befinden sich die eigentliche Logik, welche die oben beschriebenen Schritte durchführt und dabei den AST kontinuierlich modifiziert.
 
 1. **Initiales Typechecking**: Der Typechecker wird auf das ursprüngliche Programm angewendet.
 2. **Fehlererkennung**: Wenn ein Typefehler gefunden wird, wird die Funktion ermittelt, in der der Fehler aufgetreten ist. Die Position innerhalb der Funktion, sowie der Funktionsname werden gespeichert.

@@ -2,14 +2,13 @@ package checker
 
 import (
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"go/types"
-	"slices"
 )
 
 type relativeFuncError struct {
 	FuncName string
+	File     string
 	RelLine  int
 	Column   int
 	Message  string
@@ -17,6 +16,7 @@ type relativeFuncError struct {
 
 type Error struct {
 	FuncName string
+	File     string
 	Line     int
 	Column   int
 	Msg      string
@@ -31,6 +31,7 @@ func toError(e types.Error, function *ast.FuncDecl, fset *token.FileSet) relativ
 
 	return relativeFuncError{
 		FuncName: function.Name.Name,
+		File:     functionPos.Filename,
 		RelLine:  relLine,
 		Column:   column,
 		Message:  e.Msg,
@@ -46,36 +47,4 @@ func getFunctionByName(f *ast.File, name string) *ast.FuncDecl {
 		}
 	}
 	return nil
-}
-
-func resolveErrors(code string, errors map[string]relativeFuncError) []Error {
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, "file.go", code, parser.AllErrors)
-	if err != nil {
-		panic(err)
-	}
-
-	var resolved []Error
-	for _, e := range errors {
-		fn := getFunctionByName(f, e.FuncName)
-		if fn == nil {
-			continue
-		}
-		functionPos := fset.Position(fn.Pos())
-		resolved = append(resolved, Error{
-			FuncName: e.FuncName,
-			Line:     functionPos.Line + e.RelLine - 1,
-			Column:   e.Column,
-			Msg:      e.Message,
-		})
-	}
-
-	slices.SortFunc(resolved, func(a, b Error) int {
-		if a.Line != b.Line {
-			return a.Line - b.Line
-		}
-		return a.Column - b.Column
-	})
-
-	return resolved
 }

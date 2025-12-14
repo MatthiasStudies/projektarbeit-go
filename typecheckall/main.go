@@ -15,29 +15,42 @@ func showError(column int) {
 	fmt.Println("^")
 }
 
-func showErrors(code string, errors []checker.Error) {
-	lines := strings.Split(code, "\n")
+func showErrors(errors []checker.Error, files map[string]string) {
 	for _, e := range errors {
-		fmt.Printf("Type error in function `%s` at line %d, column %d: %s\n", e.FuncName, e.Line, e.Column, e.Msg)
-		if e.Line-1 >= 0 && e.Line-1 < len(lines) {
-			fmt.Println(lines[e.Line-1])
-			showError(e.Column)
+		fmt.Printf("Type error in function `%s` at %s:%d, column %d: %s\n", e.FuncName, e.File, e.Line, e.Column, e.Msg)
+		if content, exists := files[e.File]; exists {
+			lines := strings.Split(content, "\n")
+			if e.Line-1 >= 0 && e.Line-1 < len(lines) {
+				fmt.Println(lines[e.Line-1])
+				showError(e.Column)
+			}
 		}
 	}
 }
 
-func checkFile(filename string) {
-	contentRaw, err := os.ReadFile(filename)
-	if err != nil {
-		panic(err)
+func readFiles(filenames []string) map[string]string {
+	files := make(map[string]string)
+
+	for _, filename := range filenames {
+		contentRaw, err := os.ReadFile(filename)
+		if err != nil {
+			panic(err)
+		}
+		files[filename] = strings.ReplaceAll(string(contentRaw), "\t", "  ")
 	}
 
-	content := strings.ReplaceAll(string(contentRaw), "\t", "  ")
+	return files
+}
 
-	c, err := checker.NewASTBasedChecker(filename, content)
-	//c, err := checker.NewTextBasedChecker(content)
-	if err != nil {
-		panic(err)
+func checkFiles(filenames []string) {
+	files := readFiles(filenames)
+	c := checker.NewASTBasedChecker()
+
+	for name, content := range files {
+		err := c.AddFile(name, content)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	errors, err := c.Check()
@@ -45,16 +58,13 @@ func checkFile(filename string) {
 		panic(err)
 	}
 
-	// do something with the errors
-	showErrors(content, errors)
+	showErrors(errors, files)
 }
 
 func main() {
 	if len(os.Args) < 2 {
-		panic("expected at least one filename as argument")
+		panic("usage: typecheckall <file1.go> <file2.go> ...")
 	}
 
-	for _, filename := range os.Args[1:] {
-		checkFile(filename)
-	}
+	checkFiles(os.Args[1:])
 }

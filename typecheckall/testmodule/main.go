@@ -4,6 +4,7 @@ import "testmodule/submodule"
 
 func main() {
 	submodule.Method()
+	Method()
 }
 
 func M() {
