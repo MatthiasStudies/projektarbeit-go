@@ -46,7 +46,7 @@ jobs:
       - name: Use Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: ./go.mod
+          go-version-file: ./typecheckall/go.mod
       - name: Create new version
         run: |
           git tag v${{needs.get-next-version.outputs.version}}
