@@ -15,7 +15,7 @@ type Sb struct{}
 
 func (x Sa) m1() {
 	var s string
-	s = 568
+	s = 567
 }
 
 func (x Sb) m1() {}
