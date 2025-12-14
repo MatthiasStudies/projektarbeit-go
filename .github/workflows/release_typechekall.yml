@@ -62,7 +62,7 @@ jobs:
       - name: Release new version
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/*"
+          artifacts: "typecheckall/build/*"
           tag: v${{ needs.get-next-version.outputs.version }}
           generateReleaseNotes: true
 
