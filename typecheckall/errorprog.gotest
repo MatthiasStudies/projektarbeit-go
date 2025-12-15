@@ -29,10 +29,6 @@ func f[T A](x T, y B) {
 	x.m1()
 }
 
-func foo(x int, x string) {
-	print(x)
-}
-
 // This triggers an error in the function signatur, thus exiting the checker program early.
 // func e100(t String) {
 // 	print(t)

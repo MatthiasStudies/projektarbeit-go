@@ -30,7 +30,7 @@ func getParentFunc(f *ast.File, node ast.Node) *ast.FuncDecl {
 }
 
 func parseFile(fset *token.FileSet, filename string, content string) (*ast.File, error) {
-	f, err := parser.ParseFile(fset, filename, content, parser.AllErrors)
+	f, err := parser.ParseFile(fset, filename, content, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -59,31 +59,6 @@ func getZeroReturnFunctionBody(fn *ast.FuncDecl) *ast.BlockStmt {
 	}}
 }
 
-func removeError(e types.Error, f *ast.File) {
-	nodes, exact := astutil.PathEnclosingInterval(f, e.Pos, e.Pos)
-	if !exact || len(nodes) == 0 {
-		return
-	}
-
-	start := nodes[0].Pos()
-	end := nodes[0].End()
-
-	var function *ast.FuncDecl
-	for _, decl := range f.Decls {
-		if fn, ok := decl.(*ast.FuncDecl); ok {
-			if fn.Pos() <= start && fn.End() >= end {
-				function = fn
-				break
-			}
-		}
-	}
-
-	if function == nil {
-		return
-	}
-	function.Body = getZeroReturnFunctionBody(function)
-}
-
 type file struct {
 	f       *ast.File
 	name    string
@@ -105,6 +80,7 @@ func NewASTBasedChecker() Checker {
 	}
 }
 
+// AddFile adds a Go source file to the checker.
 func (c *ASTBasedChecker) AddFile(filename string, content string) error {
 	f, err := parseFile(c.fset, filename, content)
 	if err != nil {
@@ -115,16 +91,10 @@ func (c *ASTBasedChecker) AddFile(filename string, content string) error {
 	return nil
 }
 
-func (c *ASTBasedChecker) removeError(e types.Error) {
-	for i := range c.files {
-		removeError(e, c.files[i].f)
-	}
-}
-
 func (c *ASTBasedChecker) checkFiles() *types.Error {
 	conf := types.Config{
-		Importer:                 importer.For("source", nil),
-		DisableUnusedImportCheck: true,
+		Importer:                 importer.For("source", nil), // using "source" importer make importing local packages work
+		DisableUnusedImportCheck: true,                        // we may create unused imports when modifying the AST, ignore them
 	}
 
 	files := make([]*ast.File, len(c.files))
@@ -132,11 +102,13 @@ func (c *ASTBasedChecker) checkFiles() *types.Error {
 		files[i] = c.files[i].f
 	}
 
+	// check the files. The package name is not important here
 	_, err := conf.Check("pkg", c.fset, files, nil)
 	if err == nil {
 		return nil
 	}
 
+	// We expect only types.Error here
 	typeErr, ok := err.(types.Error)
 	if !ok {
 		panic(err)
@@ -146,6 +118,7 @@ func (c *ASTBasedChecker) checkFiles() *types.Error {
 }
 
 func (c *ASTBasedChecker) getErrorFunction(e types.Error) (*ast.FuncDecl, error) {
+	// We need to check each file to find the function containing the error position
 	for i := range c.files {
 		nodes, exact := astutil.PathEnclosingInterval(c.files[i].f, e.Pos, e.Pos)
 		if !exact || len(nodes) == 0 {
@@ -166,6 +139,7 @@ func (c *ASTBasedChecker) collectErrors() (map[string]relativeFuncError, error) 
 	funcErrors := make(map[string]relativeFuncError)
 
 	for {
+		// Check files and get the type error
 		typeErr := c.checkFiles()
 		if typeErr == nil {
 			// No more errors
@@ -180,7 +154,7 @@ func (c *ASTBasedChecker) collectErrors() (map[string]relativeFuncError, error) 
 		funcError := toError(*typeErr, function, c.fset)
 
 		// Early exit if we've already processed this function, for example if the error is in the function signature
-		// which can't be removed.
+		// which can't be removed. To avoid being stuck at the same error infinitely, we break here.
 		if _, exists := funcErrors[funcError.FuncName]; exists {
 			fmt.Printf("Already processed function %s breaking to avoid infinite loop", funcError.FuncName)
 			break
@@ -188,7 +162,8 @@ func (c *ASTBasedChecker) collectErrors() (map[string]relativeFuncError, error) 
 
 		funcErrors[funcError.FuncName] = funcError
 
-		c.removeError(*typeErr)
+		// Replace function body with zero return values (if any)
+		function.Body = getZeroReturnFunctionBody(function)
 	}
 
 	return funcErrors, nil
@@ -217,9 +192,11 @@ func (c *ASTBasedChecker) resolveErrors(errors map[string]relativeFuncError) ([]
 
 		function := getFunctionByName(f, e.FuncName)
 		if function == nil {
+			// should never happen
 			return nil, fmt.Errorf("could not find function %s in file %s for error resolution", e.FuncName, e.File)
 		}
 
+		// Calculate absolute line number
 		functionPos := fset.Position(function.Pos())
 		errorLine := functionPos.Line + e.RelLine - 1
 
@@ -232,6 +209,7 @@ func (c *ASTBasedChecker) resolveErrors(errors map[string]relativeFuncError) ([]
 		})
 	}
 
+	// Sort errors by file, line, column for a deterministic output
 	slices.SortFunc(resolved, func(a, b Error) int {
 		if a.File != b.File {
 			return strings.Compare(a.File, b.File)

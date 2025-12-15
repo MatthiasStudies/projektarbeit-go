@@ -366,3 +366,5 @@ Theoretisch wäre aber eine Variante denkbar, welche nur Teile einer Funktion er
 ## Angaben zur Nutzung von KI
 Einige Inhalte dieses Dokuments wurden mit Unterstützung von KI-Technologien recherchiert und verfasst. Dabei kamen insbesondere Sprachmodelle wie Google Gemini und Copilot zum Einsatz. Diese Technologien halfen dabei, Informationen zu strukturieren, Codebeispiele zu generieren und komplexe Konzepte verständlich darzustellen. Trotz sorgfältiger Überprüfung durch den Autor können Fehler oder Ungenauigkeiten nicht vollständig ausgeschlossen werden. Der Autor übernimmt die volle Verantwortung für den Inhalt dieses Dokuments.
 
+---
+© Dezember 2025 [Matthias Harzer](https://matthias.harzer.dev). Alle Rechte vorbehalten.
