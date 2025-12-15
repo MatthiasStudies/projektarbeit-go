@@ -1,4 +1,4 @@
-# Projektarbeit: Der Typechecker (wip)
+# Projektarbeit: Der Go Typechecker
 
 ## Der Go Typechecker
 
@@ -148,7 +148,6 @@ Error: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb
 ```
 Dies könnte nun erweitert werden, um über die AST-Struktur weitere Hinweise zu geben, z.B. welche Methoden fehlen, welche Typen erwartet wurden, etc.
 
-
 ### Generics in Go's Typensystem
 
 Mit der Einführung von Generics in Go 1.18 wurde das Typensystem von Go erheblich erweitert. Generics ermöglichen es, Funktionen und Datentypen zu definieren, die mit verschiedenen Typen arbeiten können, ohne dass der Code für jeden Typ dupliziert werden muss. Dies wird durch die Verwendung von Typparametern erreicht, die als Platzhalter für konkrete Typen dienen. Für eine genauere Beschreibung von Generis, siehe [generics.md](./generics.md).
@@ -204,6 +203,40 @@ Der Go Typechecker überprüft eine oder mehrere Go-Dateien, repräsentiert als 
 2. **Collect Objects**: Alle Typechecker-Objekte (`types.Object`) werden gesammelt und in den entsprechenden Scopes (`types.Scope`) organisiert. Dies umfasst das Verarbeiten von Paket-Imports, Deklarationen von Variablen, Funktionen, Typen und Konstanten.
 3 **Package Objects**: Nachdem alle Objekte gesammelt wurden, werden die ersten Paket-Objekte gechecked. Dies umfasst alle Paket Deklarationen, außer Funktionen und Methoden. Die tatsächliche Typechecking-Logik wird jedoch schon vorbereitet, um im nächsten Schritt angewendet zu werden.
 4 **Process Delayed**: Die in Schritt 3 verzögerte Typechecking-Logik wird nun angewendet. Dies umfasst das Typechecking von Funktionen, Methoden und anderen Konstrukten, die auf bereits deklarierten Objekten basieren.
+
+### Ergebnis des Typechecker
+
+Der Typechecker liefert, falls zutreffend, einen Fehler vom Typ `types.Error` zurück. Leider sind die Fehlermeldungen des Go Typecheckers oft sehr allgemein gehalten und bieten wenig Kontext zur eigentlichen Ursache des Problems. Eine genaue Unterscheidung zwischen verschiedenen Arten von Typefehlern (z.B. unbekannte Typen, nicht deklarierte Variablen, nicht-lineare Parameter) ist anhand der Fehlermeldung allein oft schwierig. 
+
+Typische Beispiele für Typefehler sind:
+
+```go
+func foo(t UnknownType) {
+	print(t)
+}
+```
+```
+undefined: UnknownType
+```
+
+```go	
+func foo() int {
+	return x
+}
+```
+```
+undefined: x
+```
+
+```go
+func foo(x int, x string) {
+	print(x)
+}
+```
+```
+x redeclared in this block
+```
+
 
 
 ## Mehrere Typefehler eines Programms finden
@@ -261,6 +294,7 @@ Um eine Endlosschleife zu vermeiden, wird intern eine Liste von bereits ersetzte
 - **Fehler außerhalb von Funktionen**: Typefehler, die außerhalb von Funktionen auftreten (z.B. in globalen Variablen oder Konstanten), können nicht durch das Ersetzen von Funktionen behoben werden. Das Programm wird in diesem Fall ebenfalls abgebrochen.
 - **Mehrere Fehler in einer Funktion**: Wenn mehrere Typefehler in der gleichen Funktion auftreten, wird nur der erste Fehler gefunden. Dies ist eine bewusste Limitierung, um die Komplexität der Implementierung zu reduzieren. 
 Theoretisch wäre aber eine Variante denkbar, welche nur Teile einer Funktion ersetzt, um mehrere Fehler in der gleichen Funktion zu finden.
+- **Unterscheidung von Fehlern**: Der Typechecker meldet nur sehr generische Fehlermeldungen, ohne genaue Ursache. Z.B. können unbekannte Typen (`func foo(t UnknownType)`), nicht deklarierte Variablen (`func foo() int { return x }`), und nicht-lineare Parameter (`func foo(x int, x string)`) nur anhand der Fehlermeldung schwer unterschieden werden.
 
 ## Quellen und weiterführende Literatur
 - [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
