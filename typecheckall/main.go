@@ -36,6 +36,7 @@ func readFiles(filenames []string) map[string]string {
 		if err != nil {
 			panic(err)
 		}
+		// Tabs are replaced for easier column calculation during error display. Not necessary for type checking.
 		files[filename] = strings.ReplaceAll(string(contentRaw), "\t", "  ")
 	}
 
