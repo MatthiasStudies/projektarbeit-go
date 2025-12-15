@@ -29,10 +29,14 @@ func f[T A](x T, y B) {
 	x.m1()
 }
 
+func foo(x int, x string) {
+	print(x)
+}
+
 // This triggers an error in the function signatur, thus exiting the checker program early.
-//func e100(t string[T]) {
-//	print(t)
-//}
+// func e100(t String) {
+// 	print(t)
+// }
 
 func e1() (bool, error) {
 	var s string
@@ -40,7 +44,7 @@ func e1() (bool, error) {
 	return false, nil
 }
 func e3() (*B, error) {
-	asd = 123
+	myVar = 123
 	return new(B), nil
 }
 
