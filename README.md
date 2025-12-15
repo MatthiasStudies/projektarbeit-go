@@ -5,13 +5,13 @@
 - [Der Go Typechecker](#der-go-typechecker)
 	* [Einführung](#einführung)
 	* [Bausteine des Typecheckers](#bausteine-des-typecheckers)
-			+ [Wichtige `types.Object`-Implementierungen](#wichtige-typesobject-implementierungen)
+		+ [Wichtige `types.Object`-Implementierungen](#wichtige-typesobject-implementierungen)
 	* [Organisation von Objekten](#organisation-von-objekten)
 		+ [Scope Hierarchie](#scope-hierarchie)
 		+ [Namensauflösung](#namensauflösung)
 	* [Typen](#typen)
 		+ [Wichtige `types.Type`s](#wichtige-typestypes)
-		+ [Kompatibilität von Typen](#komaptibilität-von-typen)
+		+ [Komaptibilität von Typen](#komaptibilität-von-typen)
 			- [Zuweisbarkeit](#zuweisbarkeit)
 			- [Vergleichbarkeit](#vergleichbarkeit)
 			- [Umwandlungsfähigkeit](#umwandlungsfähigkeit)
@@ -32,10 +32,8 @@
 
 <!-- TOC end -->
 
-<!-- TOC --><a name="der-go-typechecker"></a>
 ## Der Go Typechecker
 
-<!-- TOC --><a name="einführung"></a>
 ### Einführung
 - Der Go Typechecker ist ein wesentlicher Bestandteil des Go-Compilers, der sicherstellt, dass der Code den Typregeln der Sprache entspricht.
 - Go stellt im package `go/types` genau diese Funktionalität bereit, die es ermöglicht, Go-Code zu analysieren und zu überprüfen.
@@ -49,7 +47,6 @@
 	- **Typen (`types.Type`)**: Repräsentieren die verschiedenen Typen in Go, einschließlich primitiver Typen, zusammengesetzter Typen (Structs, Slices, Maps) und generischer Typen mit Typparametern.
 	- **Scopes (`types.Scope`)**: Repräsentieren ein mapping von Bezeichnern zu Objekten in einem bestimmten Gültigkeitsbereich (z.B. Paket-, Funktions- oder Blockebene).
 
-<!-- TOC --><a name="bausteine-des-typecheckers"></a>
 ### Bausteine des Typecheckers
 Jedes deklarierte Element in Go wird im Typechecker durch ein `types.Object` repräsentiert. Dieses wird verwendet, um Informationen über das deklarierte Element zu speichern und darauf zuzugreifen. Beispielsweise kann dadurch im Fall von Fehler- oder Code-Analyse-Tools auf Metadaten und präzise Positionen von Deklarationen im Quellcode zugegriffen werden. Das `types.Object`-Interface setzt u.A. folgende Methoden voraus (Auswahl):
 - `Name() string`: Gibt den Namen des Objekts zurück (z.b. den Variablennamen).
@@ -60,7 +57,6 @@ Jedes deklarierte Element in Go wird im Typechecker durch ein `types.Object` rep
 - `Pkg() *Package`: Gibt das Paket zurück, zu dem das Objekt gehört. `nil` für Objekte im `universe`-Scope (vordefinierte Typen und Funktionen).
 - `Id() string`: Gibt eine eindeutige Kennung für das Objekt zurück. Zwei IDs sind genau dann verschieden, wenn dieses unterschiedliche Namen habend, oder in unterschiedlichen Paketen deklariert und nicht exportiert sind (_[Uniqueness of identifiers](https://go.dev/ref/spec#Uniqueness_of_identifiers)_). Für _nicht_ exportierte Objekte wird daher die Paketkennung in die ID einbezogen, um Kollisionen zu vermeiden.
 
-<!-- TOC --><a name="wichtige-typesobject-implementierungen"></a>
 #### Wichtige `types.Object`-Implementierungen
 - `*types.Var`: Repräsentiert eine Variable (lokal, global oder Feld in einem Struct).
 - `*types.Func`: Repräsentiert eine Funktion oder Methode.
@@ -71,11 +67,9 @@ Jedes deklarierte Element in Go wird im Typechecker durch ein `types.Object` rep
 Objekte sind kanonisch, d.h. es gibt genau ein `types.Object` für jede deklarierte Entität im Quellcode. Dies ermöglicht eine konsistente und effiziente Verwaltung von Typinformationen während der Typechecking-Phase.
 
 
-<!-- TOC --><a name="organisation-von-objekten"></a>
 ### Organisation von Objekten
 Der Go Typechecker verwendet Scopes (`types.Scope`), um Objekte zu organisieren und den Gültigkeitsbereich von Bezeichnern zu verwalten. Jeder Scope wird durch einen lexikalischen Block im Quellcode beschrieben (z.B. ein Paket, eine Funktion oder ein Codeblock), in dem Bezeichner deklariert und verwendet werden können. 
 
-<!-- TOC --><a name="scope-hierarchie"></a>
 #### Scope Hierarchie
 Scopes sind hierarchisch organisiert, wobei jeder i.d.R. jeder Scope einen übergeordneten Scope hat. 
 
@@ -84,19 +78,16 @@ Scopes sind hierarchisch organisiert, wobei jeder i.d.R. jeder Scope einen über
 3. **Datei-Scope**: Jede Quellcodedatei (`*ast.File`) hat ihren eigenen Scope, der den enstprechenden Paket-Scope als übergeordneten Scope hat.
 4. **Blocklevel-Scopes**: Jede Kontrollanweisung oder Funktion hat ihren eigenen Scope, der den übergeordneten Scope (z.B. Datei-Scope ) als übergeordneten Scope hat. Geschachtelte Blöcke (z.B. Schleifen, `if`-Anweisungen) haben ebenfalls eigene Scopes, die den Scope der umgebenden Funktion oder des Blocks untergeordnet sind.
 
-<!-- TOC --><a name="namensauflösung"></a>
 #### Namensauflösung
 Um ein Objekt anhand seines Namens zu finden, stellt das `types.Scope`-Struct zwei zentrale Methoden bereit:
 - `Lookup(name string) *Object`: Sucht im aktuellen Scope nach einem Objekt mit dem angegebenen Namen. Wenn das Objekt nicht gefunden wird, wird `nil` zurückgegeben.
 - `LookupParent(name string, pos token.Pos) (*Scope, Object)`: Sucht rekursiv in dem aktuellen Scope und den übergeordnet Scopes nach einem Objekt mit dem angegebenen Namen. Der `pos`-Parameter verweist dabei auf die Position im Quellcode, an welcher nach dem Objekt gesucht werden soll. Das ist nötig, um sicherzustellen, dass ein Objekt nur gefunden wird, wenn es zum Zeitpunkt der Suche bereits deklariert wurde (Lexikalische Sichtbarkeit). Z.B. kann dadurch eine Variable im gleichen Scope nicht vor ihrer Deklaration gefunden werden.
 
-<!-- TOC --><a name="typen"></a>
 ### Typen
 Jedes Objekt (`types.Object`) des Go Typecheckers hat einen zugehörigen Typ (`types.Type`), der den Datentyp der deklarierten Entität beschreibt. Der `types.Type`-Interface ist die zentrale Abstraktion für alle Typen in Go, einschließlich primitiver Typen (z.B. `int`, `string`), zusammengesetzter Typen (z.B. Structs, Slices, Maps) und generischer Typen mit Typparametern.
 Das `types.Type`-Interface definiert nur wenige Methoden, da Typen sehr unterschiedlich sein können. Die primäre Methode ist:
 - `Underlying() Type`: Gibt den zugrunde liegenden Typ zurück. Dies ist besonders nützlich für benutzerdefinierte Typen, um den Basisdatentyp zu ermitteln. Für primitive Typen gibt diese Methode den Typ selbst zurück. Zugrunde liegende Typen sind niemals benannte Typen oder Aliase.
 
-<!-- TOC --><a name="wichtige-typestypes"></a>
 #### Wichtige `types.Type`s
 - `*types.Basic`: Repräsentiert primitive Typen wie `int`, `string`, `bool`.
 - `*types.Struct`: Repräsentiert Struct-Typen mit Feldern.
@@ -106,11 +97,9 @@ Das `types.Type`-Interface definiert nur wenige Methoden, da Typen sehr untersch
 
 > Achtung: Nach der Go-Spezifikation sind primitive Typen wie `int` und `string` ebenfalls benannte Typen, da sie durch `type`-Deklarationen definiert sind. Im Go Typechecker werden diese jedoch als `*types.Basic` repräsentiert, um ihre spezielle Rolle als primitive Typen zu verdeutlichen.
 
-<!-- TOC --><a name="komaptibilität-von-typen"></a>
-#### Kompatibilität von Typen
+#### Komaptibilität von Typen
 Um zu überprüfen, ob zwei Typen miteinander kompatibel sind, unterscheided Go zwischen drei Beziehungen von Typen. Für jede dieser Beziehungen stellt der `go/types`-Package entsprechende Funktionen bereit
 
-<!-- TOC --><a name="zuweisbarkeit"></a>
 ##### Zuweisbarkeit
 Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen auch Funktionsaufrufe mit Parametern, Map-Zugriff, etc.) verwendet werden können. Für zwei Typen `T` und `V` ist `V` zuweisbar zu `T`, wenn eines der folgenden Kriterien erfüllt ist (Auswahl):
 - `V` und `T` sind identisch.
@@ -136,13 +125,11 @@ Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen au
 - Weitere spezielle Regeln für bestimmte Typen (z.B. Schnittstellen, Funktionen, etc.).
 Um zu überprüfen, ob zwei Typen zueinander zuweisbar sind, stellt das `go/types`-Package die Funktion `types.AssignableTo(V, T Type) bool` bereit.
 
-<!-- TOC --><a name="vergleichbarkeit"></a>
 ##### Vergleichbarkeit
 Regelt, ob ein Type mit `==` oder `!=` verglichen werden kann. Primitive Typen und Pointer sind beispielsweise immer vergleichbar, während Structs und Arrays nur unter bestimmten Bedingungen vergleichbar sind. Damit ein Struct vergleichbar ist, müssen alle seine Felder vergleichbar sein. Arrays sind vergleichbar, wenn ihr Elementtyp vergleichbar ist. Slices, Maps und Funktionen sind niemals vergleichbar.
 
 Um zu überprüfen, ob ein Typ vergleichbar ist, stellt das `go/types`-Package die Funktion `types.Comparable(T Type) bool` bereit.
 
-<!-- TOC --><a name="umwandlungsfähigkeit"></a>
 ##### Umwandlungsfähigkeit
 Regelt, ob ein Wert von einem Type in einen anderen Type umgewandelt werden kann. Umwandlungen können sowohl explizit (z.B. `T(v)`) als auch implizit (z.B. bei Funktionsaufrufen) erfolgen. Ein Wert `x` kann dann in einen Typ `T` umgewandelt werden, wenn eines der folgenden Kriterien erfüllt ist (Auswahl):
 - `x` ist zuweisbar zu `T`.
@@ -152,13 +139,11 @@ Regelt, ob ein Wert von einem Type in einen anderen Type umgewandelt werden kann
 
 Um zu überprüfen, ob ein Typ in einen anderen Typ umgewandelt werden kann, stellt das `go/types`-Package die Funktion `types.ConvertibleTo(V, T Type) bool` bereit.
 
-<!-- TOC --><a name="implementierungsdetails-des-go-typecheckers"></a>
 ##### Implementierungsdetails des Go Typecheckers
 Der Go Typechecker läd zu beginn eines Checks alle Objekte und Typen in den Arbeitsspeicher. Zuweisbarkeit, Vergleichbarkeit und Umwandlungsfähigkeit wird dabei **nicht** gecached. Beispielsweise wird bei jeder Struct-zu-Interface-Zuweisung erneut überprüft, ob das Struct alle geforderten Methoden des Interfaces implementiert. Da bereits alle Objekte im Speicher vorliegen, ist dies jedoch sehr schnell.
 
 In einem kurzen Experiment lässt sich darstellen, dass der Go Typechecker Zuweisbarkeitsprüfungen nicht cached. Siehe dazu den Ordner [`stress-test`](./stress-test/) für weitere Informationen.
 
-<!-- TOC --><a name="verbindung-von-ast-und-typechecker"></a>
 ### Verbindung von AST und Typechecker
 Mit dem `types.Type` und `types.Object` fehlt dem Typechecker noch die Verbindung zum Quellcode. Diese Verbindung wird durch das `types.Info`-Struct hergestellt, das während des Typecheckings mit Informationen über die Typen und Objekte im Quellcode gefüllt wird. Das `types.Info`-Struct enthält mehrere Maps, die verschiedene Aspekte des Quellcodes abbilden. Die wichtigsten davon sind:
 - `Types map[ast.Expr]types.TypeAndValue`: Verknüpft jeden AST-Ausdruck (`ast.Expr`) mit seinem Typ und Wert (nur für Kosntanten).
@@ -168,7 +153,6 @@ Mit dem `types.Type` und `types.Object` fehlt dem Typechecker noch die Verbindun
 
 Mit diesen Feldern ist das `types.Info`-Struct die zentrale Verbindung zwischen dem abstrakten Syntaxbaum (AST) und den Typinformationen, die vom Typechecker generiert werden. Dadurch können Tools und Anwendungen detaillierte Analysen des Go-Codes durchführen, indem sie sowohl die Struktur des Codes als auch die zugehörigen Typinformationen berücksichtigen.
 
-<!-- TOC --><a name="verbesserung-von-typeerrors"></a>
 ### Verbesserung von Typeerrors
 Der Go Compiler gibt bei Typefehlern nur sehr allgemeine Fehlermeldungen aus, die oft wenig hilfreich sind, um die genaue Ursache des Problems zu identifizieren. Durch die Verwendung des `go/types`-Packages könnte es möglich sein, detailliertere und präzisere Fehlermeldungen zu generieren. Eine einfache Implementierung könnte zunächst den Context der Fehlerstelle dargestellt werden. Ein kleines Beispiel befindet sich im [`better-error`](./better-error/) Ordner:
 
@@ -196,14 +180,12 @@ Error: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb
 ```
 Dies könnte nun erweitert werden, um über die AST-Struktur weitere Hinweise zu geben, z.B. welche Methoden fehlen, welche Typen erwartet wurden, etc.
 
-<!-- TOC --><a name="generics-in-gos-typensystem"></a>
 ### Generics in Go's Typensystem
 
 Mit der Einführung von Generics in Go 1.18 wurde das Typensystem von Go erheblich erweitert. Generics ermöglichen es, Funktionen und Datentypen zu definieren, die mit verschiedenen Typen arbeiten können, ohne dass der Code für jeden Typ dupliziert werden muss. Dies wird durch die Verwendung von Typparametern erreicht, die als Platzhalter für konkrete Typen dienen. Für eine genauere Beschreibung von Generis, siehe [generics.md](./generics.md).
 
 Für die Implementierung von Generics verwendet der Go Compiller Monomorphisierung. Das bedeutet, dass für jede Instanziierung einer generischen Funktion oder eines generischen Typs eine sperate Version des Codes mit dem konkreten Typ generiert wird. Generics werden also zur Compile-Zeit aufgelöst und fungieren damit lediglich als eine Art Kurzschreibweise für wiederverwendbaren Code.
 
-<!-- TOC --><a name="konsequenzen-des-monomorphisierungsansatzes"></a>
 #### Konsequenzen des Monomorphisierungsansatzes
 
 - **Kein Laufzeit-Overhead**: Da Generics zur Compile-Zeit aufgelöst werden, gibt es keinen Laufzeit-Overhead durch Typparameter oder Typinformationen. Der generische Code wird in spezialisierten Versionen für jeden konkreten Typ kompiliert, was zu optimiertem Maschinencode führt.
@@ -239,7 +221,6 @@ Für die Implementierung von Generics verwendet der Go Compiller Monomorphisieru
 
 	Wie im Beispiel zu sehen, verschwindet das Interface-Constraint `Shape` nach der Instanziierung, und `T` wird zu `Square`. Daher ist die Zuweisung von `y` (vom Typ `Circle`) zu `x` (vom Typ `Square`) nicht erlaubt, da `Square` und `Circle` unterschiedliche Typen sind und keine direkte Zuweisbarkeit besteht.
 
-<!-- TOC --><a name="kontrast-zu-anderen-sprachen"></a>
 #### Kontrast zu anderen Sprachen
 
 Viele Programmiersprachen, welche Generics unterstützen, verwenden stattdessen Typ-Erasure. Dabei werden Typparameter zur Laufzeit durch einen allgemeinen Typ (z.B. `Object` in Java) ersetzt, und Typinformationen gehen verloren. Dies ermöglicht eine flexiblere Zuweisbarkeit und Interoperabilität zwischen verschiedenen Typen, führt jedoch zu Laufzeit-Overhead und potenziellen Performance-Einbußen.
@@ -247,7 +228,6 @@ Viele Programmiersprachen, welche Generics unterstützen, verwenden stattdessen 
 **Der Vorteil von Go's Monomorphisierungsansatz** liegt in der Kombination aus hoher Performance (kein Laufzeit-Overhead) und Typsicherheit zur Compile-Zeit. Allerdings erfordert dieser Ansatz ein tieferes Verständnis der Typensystemregeln (was zu Verwirrungen führen kann) und kann zu größeren Binärdateien führen.
 **Der Nachteil** ist die eingeschränkte Flexibilität bei der Zuweisbarkeit und die Notwendigkeit, den Code für verschiedene Typen zu duplizieren.
 
-<!-- TOC --><a name="ablauf-des-typecheckings"></a>
 ### Ablauf des Typecheckings
 Der Go Typechecker überprüft eine oder mehrere Go-Dateien, repräsentiert als ASTs (`*ast.File`). Dabei durchläuft der Typechecker mehrere Phasen, um sicherzustellen, dass der Code den Typregeln von Go entspricht. Ein grober Überblick über den Ablauf des Typecheckings ist wie folgt (parallel zur tatsächlichen Implementierung in [`go/types/check.go`](https://github.com/golang/go/blob/1b291b70dff51732415da5b68debe323704d8e8d/src/go/types/check.go#L521-L551)):
 
@@ -256,7 +236,6 @@ Der Go Typechecker überprüft eine oder mehrere Go-Dateien, repräsentiert als 
 3 **Package Objects**: Nachdem alle Objekte gesammelt wurden, werden die ersten Paket-Objekte gechecked. Dies umfasst alle Paket Deklarationen, außer Funktionen und Methoden. Die tatsächliche Typechecking-Logik wird jedoch schon vorbereitet, um im nächsten Schritt angewendet zu werden.
 4 **Process Delayed**: Die in Schritt 3 verzögerte Typechecking-Logik wird nun angewendet. Dies umfasst das Typechecking von Funktionen, Methoden und anderen Konstrukten, die auf bereits deklarierten Objekten basieren.
 
-<!-- TOC --><a name="ergebnis-des-typechecker"></a>
 ### Ergebnis des Typechecker
 
 Der Typechecker liefert, falls zutreffend, einen Fehler vom Typ `types.Error` zurück. Leider sind die Fehlermeldungen des Go Typecheckers oft sehr allgemein gehalten und bieten wenig Kontext zur eigentlichen Ursache des Problems. Eine genaue Unterscheidung zwischen verschiedenen Arten von Typefehlern (z.B. unbekannte Typen, nicht deklarierte Variablen, nicht-lineare Parameter) ist anhand der Fehlermeldung allein oft schwierig. 
@@ -292,21 +271,18 @@ x redeclared in this block
 
 
 
-<!-- TOC --><a name="mehrere-typefehler-eines-programms-finden"></a>
 ## Mehrere Typefehler eines Programms finden
 
 Eine Schwierigkeit bei der Verwendung des Go Typecheckers besteht darin, dass dieser maximal einen Fehler pro Durchlauf meldet.
 Dies liegt daran, dass der Typechecker bei einem Fehler den aktuellen Überprüfungsprozess abbricht, um inkonsistente Zustände zu vermeiden. 
 Wenn man also mehrere Typefehler in einem Programm finden möchte, muss man sich etwas einfallen lassen.
 
-<!-- TOC --><a name="die-idee"></a>
 ### Die Idee
 Um mehrere Typefehler in einem einzigen Programm zu finden, lässt man zunächst den Typechecker normal laufen. Wenn ein Fehler gefunden wird, 
 wir die Funktion ermittelt, in der der Fehler aufgetreten ist. Anschließend wird eine neue Version des Programmes erstellt,
 in welcher die fehlerhafte Funktion durch eine Dummy-Implementierung ersetzt wird. Anschließend wird der Typechecker erneut auf das modifizierte Programm angewendet.
 Dieser Prozess wird wiederholt, bis keine weiteren Fehler mehr gefunden werden.
 
-<!-- TOC --><a name="implementierung"></a>
 ### Implementierung
 Eine einfache Implementierung dieser Idee befindet sich im Ordner [`typecheckall`](./typecheckall/).
 ```bash
@@ -343,7 +319,6 @@ Dies funktioniert sogar für Interfaces, was die Implementierung vereinfacht.
 5. **Wiederholung**: Die Schritte 2-4 werden wiederholt, bis keine weiteren Typefehler mehr gefunden werden.
 6. **Fehlerausgabe**: Alle gefundenen Typefehler werden gesammelt und am Ende ausgegeben. Durch den gespeicherten Funktionsnamen und die Position kann die Fehlerstelle im Originalcode leicht gefunden werden.
 
-<!-- TOC --><a name="probleme-und-einschränkungen"></a>
 #### Probleme und Einschränkungen
 - **Entstehende Fehler durch das Ersetzen von Funktionen**: Wenn eine Funktion ersetzt wird, kann dies zu neuen Typefehlern führen, die zuvor nicht aufgetreten sind. Z.B. wenn eine fehlerhafte Funktion der einzige Ort war, an dem ein importiertes Paket verwendet wurde, und die Dummy-Implementierung dieses Paket nicht mehr verwendet. In diesem Fall würde der Typechecker einen Fehler melden, dass das Paket importiert, aber nicht verwendet wird. Dies kann jedoch durch einen Konfigurationsparameter des Typecheckers `DisableUnusedImportCheck` verhindert werden.
 - **Fehler in Funktionssignaturen**: Wenn der Typefehler in der Signatur einer Funktion auftritt, kann die Funktion nicht korrekt ersetzt werden. 
@@ -353,7 +328,6 @@ Um eine Endlosschleife zu vermeiden, wird intern eine Liste von bereits ersetzte
 Theoretisch wäre aber eine Variante denkbar, welche nur Teile einer Funktion ersetzt, um mehrere Fehler in der gleichen Funktion zu finden.
 - **Unterscheidung von Fehlern**: Der Typechecker meldet nur sehr generische Fehlermeldungen, ohne genaue Ursache. Z.B. können unbekannte Typen (`func foo(t UnknownType)`), nicht deklarierte Variablen (`func foo() int { return x }`), und nicht-lineare Parameter (`func foo(x int, x string)`) nur anhand der Fehlermeldung schwer unterschieden werden.
 
-<!-- TOC --><a name="quellen-und-weiterführende-literatur"></a>
 ## Quellen und weiterführende Literatur
 - [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
 - [`go/types`: The Go Type Checker](https://github.com/golang/example/tree/7f05d217867b2af52b0a28c6d1c91df97e1b5b39/gotypes)
@@ -362,7 +336,6 @@ Theoretisch wäre aber eine Variante denkbar, welche nur Teile einer Funktion er
 - [The Go Programming Language Specification](https://go.dev/ref/spec)
 - [Go Standard Library Documentation (`go/types`)](https://pkg.go.dev/go/types@go1.25.4)
 
-<!-- TOC --><a name="angaben-zur-nutzung-von-ki"></a>
 ## Angaben zur Nutzung von KI
 Einige Inhalte dieses Dokuments wurden mit Unterstützung von KI-Technologien recherchiert und verfasst. Dabei kamen insbesondere Sprachmodelle wie Google Gemini und Copilot zum Einsatz. Diese Technologien halfen dabei, Informationen zu strukturieren, Codebeispiele zu generieren und komplexe Konzepte verständlich darzustellen. Trotz sorgfältiger Überprüfung durch den Autor können Fehler oder Ungenauigkeiten nicht vollständig ausgeschlossen werden. Der Autor übernimmt die volle Verantwortung für den Inhalt dieses Dokuments.
 
