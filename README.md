@@ -49,6 +49,7 @@
 
 ### Bausteine des Typecheckers
 Jedes deklarierte Element in Go wird im Typechecker durch ein `types.Object` repräsentiert. Dieses wird verwendet, um Informationen über das deklarierte Element zu speichern und darauf zuzugreifen. Beispielsweise kann dadurch im Fall von Fehler- oder Code-Analyse-Tools auf Metadaten und präzise Positionen von Deklarationen im Quellcode zugegriffen werden. Das `types.Object`-Interface setzt u.A. folgende Methoden voraus (Auswahl):
+
 - `Name() string`: Gibt den Namen des Objekts zurück (z.b. den Variablennamen).
 - `Exported() bool`: Gibt zurück, ob das Objekt exportiert ist (d.h. ob es mit einem Großbuchstaben beginnt).
 - `Type() Type`: Gibt den Typ des Objekts zurück (z.B. den Typ einer Variable oder die signatur einer Funktion).
@@ -86,6 +87,7 @@ Um ein Objekt anhand seines Namens zu finden, stellt das `types.Scope`-Struct zw
 ### Typen
 Jedes Objekt (`types.Object`) des Go Typecheckers hat einen zugehörigen Typ (`types.Type`), der den Datentyp der deklarierten Entität beschreibt. Der `types.Type`-Interface ist die zentrale Abstraktion für alle Typen in Go, einschließlich primitiver Typen (z.B. `int`, `string`), zusammengesetzter Typen (z.B. Structs, Slices, Maps) und generischer Typen mit Typparametern.
 Das `types.Type`-Interface definiert nur wenige Methoden, da Typen sehr unterschiedlich sein können. Die primäre Methode ist:
+
 - `Underlying() Type`: Gibt den zugrunde liegenden Typ zurück. Dies ist besonders nützlich für benutzerdefinierte Typen, um den Basisdatentyp zu ermitteln. Für primitive Typen gibt diese Methode den Typ selbst zurück. Zugrunde liegende Typen sind niemals benannte Typen oder Aliase.
 
 #### Wichtige `types.Type`s
@@ -102,9 +104,9 @@ Um zu überprüfen, ob zwei Typen miteinander kompatibel sind, unterscheided Go 
 
 ##### Zuweisbarkeit
 Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen auch Funktionsaufrufe mit Parametern, Map-Zugriff, etc.) verwendet werden können. Für zwei Typen `T` und `V` ist `V` zuweisbar zu `T`, wenn eines der folgenden Kriterien erfüllt ist (Auswahl):
+
 - `V` und `T` sind identisch.
 - `V` und `T` haben den gleichen zugrunde liegenden Typ und mindestens einer von `T` oder `V` ist kein benannter Typ.
-
 	> Achtung: Benannte Typen bezieht sich hier auf die Definition der Go-Spezifikation, nicht auf die vom Typecheker verwendeten `*types.Named`. Daher sind `int`, `string`, etc. auch benannte Typen.
 
 	```go
@@ -119,7 +121,8 @@ Zuweisbarkeit regelt, welche Paare von Typen in Zuweisungen (darunter zählen au
 	var c []int
 	var d MySlice
 
-	c = d // Erlaubt: zugrunde liegender Typ ist gleich ([]int) und c ist kein benannter Typ
+	c = d 
+	// Erlaubt: zugrunde liegender Typ ist gleich ([]int) und c ist kein benannter Typ
 	```
 
 - Weitere spezielle Regeln für bestimmte Typen (z.B. Schnittstellen, Funktionen, etc.).
@@ -132,6 +135,7 @@ Um zu überprüfen, ob ein Typ vergleichbar ist, stellt das `go/types`-Package d
 
 ##### Umwandlungsfähigkeit
 Regelt, ob ein Wert von einem Type in einen anderen Type umgewandelt werden kann. Umwandlungen können sowohl explizit (z.B. `T(v)`) als auch implizit (z.B. bei Funktionsaufrufen) erfolgen. Ein Wert `x` kann dann in einen Typ `T` umgewandelt werden, wenn eines der folgenden Kriterien erfüllt ist (Auswahl):
+
 - `x` ist zuweisbar zu `T`.
 - `x` ist ein `string` und `T` ist ein `[]byte` oder `[]rune` (undumgekehrt).
 - `x` und `T` sind beide numerische Typen (z.B. `int`, `float64`, etc.).
@@ -146,6 +150,7 @@ In einem kurzen Experiment lässt sich darstellen, dass der Go Typechecker Zuwei
 
 ### Verbindung von AST und Typechecker
 Mit dem `types.Type` und `types.Object` fehlt dem Typechecker noch die Verbindung zum Quellcode. Diese Verbindung wird durch das `types.Info`-Struct hergestellt, das während des Typecheckings mit Informationen über die Typen und Objekte im Quellcode gefüllt wird. Das `types.Info`-Struct enthält mehrere Maps, die verschiedene Aspekte des Quellcodes abbilden. Die wichtigsten davon sind:
+
 - `Types map[ast.Expr]types.TypeAndValue`: Verknüpft jeden AST-Ausdruck (`ast.Expr`) mit seinem Typ und Wert (nur für Kosntanten).
 - `Defs map[*ast.Ident]types.Object`: Verknüpft jede Identifier-Deklaration (`*ast.Ident`) mit dem entsprechenden Objekt (`types.Object`).
 - `Uses map[*ast.Ident]types.Object`: Verknüpft jede Identifier-Verwendung (`*ast.Ident`) mit dem entsprechenden Objekt (`types.Object`).
@@ -162,20 +167,20 @@ go run better_error.go error_prog.gotest
 ```
 ```
 Type error in .\error_prog.gotest at line 28, column 11:
-    18 | func (x Sb) m1() {}
-    19 | func (x Sb) m2() {}
-    20 | 
-    21 | // Some generic function.
-    22 | func f[T A](x T, y B) {
-    23 |     y.m2()
-    24 |     x.m1()
-    25 | }
-    26 | 
-    27 | func main() {
+		18 | func (x Sb) m1() {}
+		19 | func (x Sb) m2() {}
+		20 | 
+		21 | // Some generic function.
+		22 | func f[T A](x T, y B) {
+		23 |     y.m2()
+		24 |     x.m1()
+		25 | }
+		26 | 
+		27 | func main() {
 >   28 |     f[Sb](Sa{}, Sb{})
-       |           ^^---- Here
-    29 | }
-    30 | 
+			 |           ^^---- Here
+		29 | }
+		30 | 
 Error: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb]
 ```
 Dies könnte nun erweitert werden, um über die AST-Struktur weitere Hinweise zu geben, z.B. welche Methoden fehlen, welche Typen erwartet wurden, etc.
@@ -191,6 +196,7 @@ Für die Implementierung von Generics verwendet der Go Compiller Monomorphisieru
 - **Kein Laufzeit-Overhead**: Da Generics zur Compile-Zeit aufgelöst werden, gibt es keinen Laufzeit-Overhead durch Typparameter oder Typinformationen. Der generische Code wird in spezialisierten Versionen für jeden konkreten Typ kompiliert, was zu optimiertem Maschinencode führt.
 - **Code-Duplizierung / Binärgrößenzunahme**: Jede Instanziierung einer generischen Funktion oder eines generischen Typs führt zu einer separaten Kopie des Codes. Dies kann zu einer erhöhten Binärgröße führen, insbesondere wenn viele verschiedene Typen verwendet werden.
 - **Eingeschänkte Zuweisbarkeit trotz Constraint**: Da Generics zur Compile-Zeit aufgelöst werden, verschwinden Constraints nach der Instanziierung. Dadurch sind z.B. Zuweisungen eines konkreten Structs zu einer Generischen Variable, wessen Typ durch ein Interface-Constraint eingeschränkt ist, nicht erlaubt, selbst wenn das Struct alle Methoden des Interface implementiert: 
+
 	```go
 	type Shape interface {
 			size()
@@ -213,6 +219,7 @@ Für die Implementierung von Generics verwendet der Go Compiller Monomorphisieru
 	}
 	```
 	Der Go-Compiler überstzt die generische Funktion dann in etwa so:
+
 	```go
 	func f_Square(x Square, y Circle) {
 			x = y // Nicht erlaubt, da Square nicht Circle und auch kein subtype davon ist
@@ -233,8 +240,8 @@ Der Go Typechecker überprüft eine oder mehrere Go-Dateien, repräsentiert als 
 
 1. **Initialize Files**: Initialisiert die internen Datenstrukturen des Typecheckers für die zu überprüfenden Dateien. Dies umfasst u.A. das Erfassen von Go-Versionen pro Datei, um sicherzustellen, dass alle Dateien miteinander kompatibel sind.
 2. **Collect Objects**: Alle Typechecker-Objekte (`types.Object`) werden gesammelt und in den entsprechenden Scopes (`types.Scope`) organisiert. Dies umfasst das Verarbeiten von Paket-Imports, Deklarationen von Variablen, Funktionen, Typen und Konstanten.
-3 **Package Objects**: Nachdem alle Objekte gesammelt wurden, werden die ersten Paket-Objekte gechecked. Dies umfasst alle Paket Deklarationen, außer Funktionen und Methoden. Die tatsächliche Typechecking-Logik wird jedoch schon vorbereitet, um im nächsten Schritt angewendet zu werden.
-4 **Process Delayed**: Die in Schritt 3 verzögerte Typechecking-Logik wird nun angewendet. Dies umfasst das Typechecking von Funktionen, Methoden und anderen Konstrukten, die auf bereits deklarierten Objekten basieren.
+3. **Package Objects**: Nachdem alle Objekte gesammelt wurden, werden die ersten Paket-Objekte gechecked. Dies umfasst alle Paket Deklarationen, außer Funktionen und Methoden. Die tatsächliche Typechecking-Logik wird jedoch schon vorbereitet, um im nächsten Schritt angewendet zu werden.
+4. **Process Delayed**: Die in Schritt 3 verzögerte Typechecking-Logik wird nun angewendet. Dies umfasst das Typechecking von Funktionen, Methoden und anderen Konstrukten, die auf bereits deklarierten Objekten basieren.
 
 ### Ergebnis des Typechecker
 
@@ -246,29 +253,25 @@ Typische Beispiele für Typefehler sind:
 func foo(t UnknownType) {
 	print(t)
 }
+
+// Fehler: undefined: UnknownType
 ```
-```
-undefined: UnknownType
-```
+
 
 ```go	
 func foo() int {
 	return x
 }
-```
-```
-undefined: x
+
+// Fehler: undefined: x
 ```
 
 ```go
 func foo(x int, x string) {
 	print(x)
 }
+// Fehler: x redeclared in this block
 ```
-```
-x redeclared in this block
-```
-
 
 
 ## Mehrere Typefehler eines Programms finden
@@ -291,20 +294,20 @@ go run main.go errorprog.gotest
 ```
 ```
 Type error in function `m1` at line 18, column 7: cannot use 567 (untyped int constant) as string value in assignment
-  s = 567
-      ^
+	s = 567
+			^
 Type error in function `e1` at line 37, column 7: cannot use 123 (untyped int constant) as string value in assignment
-  s = 123
-      ^
+	s = 123
+			^
 Type error in function `e3` at line 41, column 3: undefined: asd
-  asd = 123
-  ^
+	asd = 123
+	^
 Type error in function `e2` at line 48, column 7: cannot use 312 (untyped int constant) as string value in assignment
-  t = 312
-      ^
+	t = 312
+			^
 Type error in function `e4` at line 54, column 9: cannot use Sa{} (value of struct type Sa) as Sb value in argument to f[Sb]
-  f[Sb](Sa{}, Sb{})
-        ^
+	f[Sb](Sa{}, Sb{})
+				^
 ```
 
 Im `checker`-Unterpackage befinden sich die eigentliche Logik, welche die oben beschriebenen Schritte durchführt und dabei den AST kontinuierlich modifiziert.
@@ -340,4 +343,4 @@ Theoretisch wäre aber eine Variante denkbar, welche nur Teile einer Funktion er
 Einige Inhalte dieses Dokuments wurden mit Unterstützung von KI-Technologien recherchiert und verfasst. Dabei kamen insbesondere Sprachmodelle wie Google Gemini und Copilot zum Einsatz. Diese Technologien halfen dabei, Informationen zu strukturieren, Codebeispiele zu generieren und komplexe Konzepte verständlich darzustellen. Trotz sorgfältiger Überprüfung durch den Autor können Fehler oder Ungenauigkeiten nicht vollständig ausgeschlossen werden. Der Autor übernimmt die volle Verantwortung für den Inhalt dieses Dokuments.
 
 ---
-© Dezember 2025 [Matthias Harzer](https://matthias.harzer.dev). Alle Rechte vorbehalten.
+© Dezember 2025 [Matthias Harzer](https://matthias.harzer.dev)
