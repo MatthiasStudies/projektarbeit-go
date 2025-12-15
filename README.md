@@ -197,6 +197,15 @@ Viele Programmiersprachen, welche Generics unterstützen, verwenden stattdessen 
 **Der Vorteil von Go's Monomorphisierungsansatz** liegt in der Kombination aus hoher Performance (kein Laufzeit-Overhead) und Typsicherheit zur Compile-Zeit. Allerdings erfordert dieser Ansatz ein tieferes Verständnis der Typensystemregeln (was zu Verwirrungen führen kann) und kann zu größeren Binärdateien führen.
 **Der Nachteil** ist die eingeschränkte Flexibilität bei der Zuweisbarkeit und die Notwendigkeit, den Code für verschiedene Typen zu duplizieren.
 
+### Ablauf des Typecheckings
+Der Go Typechecker überprüft eine oder mehrere Go-Dateien, repräsentiert als ASTs (`*ast.File`). Dabei durchläuft der Typechecker mehrere Phasen, um sicherzustellen, dass der Code den Typregeln von Go entspricht. Ein grober Überblick über den Ablauf des Typecheckings ist wie folgt (parallel zur tatsächlichen Implementierung in [`go/types/check.go`](https://github.com/golang/go/blob/1b291b70dff51732415da5b68debe323704d8e8d/src/go/types/check.go#L521-L551)):
+
+1. **Initialize Files**: Initialisiert die internen Datenstrukturen des Typecheckers für die zu überprüfenden Dateien. Dies umfasst u.A. das Erfassen von Go-Versionen pro Datei, um sicherzustellen, dass alle Dateien miteinander kompatibel sind.
+2. **Collect Objects**: Alle Typechecker-Objekte (`types.Object`) werden gesammelt und in den entsprechenden Scopes (`types.Scope`) organisiert. Dies umfasst das Verarbeiten von Paket-Imports, Deklarationen von Variablen, Funktionen, Typen und Konstanten.
+3 **Package Objects**: Nachdem alle Objekte gesammelt wurden, werden die ersten Paket-Objekte gechecked. Dies umfasst alle Paket Deklarationen, außer Funktionen und Methoden. Die tatsächliche Typechecking-Logik wird jedoch schon vorbereitet, um im nächsten Schritt angewendet zu werden.
+4 **Process Delayed**: Die in Schritt 3 verzögerte Typechecking-Logik wird nun angewendet. Dies umfasst das Typechecking von Funktionen, Methoden und anderen Konstrukten, die auf bereits deklarierten Objekten basieren.
+
+
 ## Mehrere Typefehler eines Programms finden
 
 Eine Schwierigkeit bei der Verwendung des Go Typecheckers besteht darin, dass dieser maximal einen Fehler pro Durchlauf meldet.
