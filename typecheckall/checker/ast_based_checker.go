@@ -7,6 +7,8 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"slices"
+	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
 )
@@ -229,6 +231,16 @@ func (c *ASTBasedChecker) resolveErrors(errors map[string]relativeFuncError) ([]
 			Msg:      e.Message,
 		})
 	}
+
+	slices.SortFunc(resolved, func(a, b Error) int {
+		if a.File != b.File {
+			return strings.Compare(a.File, b.File)
+		}
+		if a.Line != b.Line {
+			return a.Line - b.Line
+		}
+		return a.Column - b.Column
+	})
 
 	return resolved, nil
 }
